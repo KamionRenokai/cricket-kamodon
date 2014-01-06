@@ -1444,13 +1444,13 @@ DO
                 IF TrigPos(ai, 1) = "L" THEN
                     'LOCATE 2, 1: PRINT "PUT IT OUT!!!": _DISPLAY
                     qp = VAL(TrigPos(ai, 2)): pq = VAL(TrigPos(ai, 3))
-                    IF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp, pq - 1) = 0 THEN 'Found the edge of the platform? Turn around.
+                    IF MnS(ai, 4) = 0 OR pq = 0 THEN 'Found the leftmost side of the map? Turn around.
+                        TrigPos(ai, 1) = "R"
+                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp, pq - 1) = 0 THEN 'Found the edge of the platform? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) + 1: MnS(ai, 1) = MnS(ai, 1) + 1: MnS(ai, 4) = MnS(ai, 4) + 1
                         TrigPos(ai, 1) = "R"
-                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp + 1, pq - 1) = 2 THEN 'A wall in front of you? Turn around.
+                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp - 1, pq - 1) = 2 THEN 'A wall in front of you? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) + 1: MnS(ai, 1) = MnS(ai, 1) + 1: MnS(ai, 4) = MnS(ai, 4) + 1
-                        TrigPos(ai, 1) = "R"
-                    ELSEIF MnS(ai, 4) = 0 THEN 'Found the leftmost side of the map? Turn around.
                         TrigPos(ai, 1) = "R"
                     ELSE 'Nothing stopping you from moving? Keep going.
                         MnS(ai, 0) = MnS(ai, 0) - 1
@@ -1465,7 +1465,7 @@ DO
                     IF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp, pq + 1) = 0 THEN 'Found the edge of the platform? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
                         TrigPos(ai, 1) = "L"
-                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp + 1, pq + 1) = 2 THEN 'A wall in front of you? Turn around.
+                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp - 1, pq + 1) = 2 THEN 'A wall in front of you? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
                         TrigPos(ai, 1) = "L"
                     ELSE 'Nothing stopping you from moving? Keep going.
@@ -1659,6 +1659,7 @@ IF atk = -1 AND _KEYDOWN(MoveLeft) AND slidecount% = 0 THEN 'I should probably r
                 IF MnS(n, 5) = 1 THEN
                     MnS(n, 0) = MnS(n, 0) + 1
                     MnS(n, 1) = MnS(n, 1) + 1
+                    IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
                     IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
                 END IF
             NEXT n
@@ -1780,6 +1781,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveRight) AND slidecount% = 0 THEN
                 IF MnS(n, 5) = 1 THEN
                     MnS(n, 0) = MnS(n, 0) - 1
                     MnS(n, 1) = MnS(n, 1) - 1
+                    IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) - 1
                     IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
                 END IF
             NEXT n
