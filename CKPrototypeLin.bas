@@ -1428,14 +1428,8 @@ DO
         IF slidecount% = 0 AND jdset THEN jdrop = 1: jdset = 0
     END IF
 
-    'STEP 5: Check for player input, to decide what to do, next
-
-    'TODO: Figure out how to reset the animation to the standing sprite, if the player stops moving.
-    kp& = _KEYHIT 'For any extra keys that don't need to be held down to work.
-    IF cont% = 0 THEN GOSUB KeyCtrlCheck ELSE GOSUB JoyCtrlCheck
-
-    'STEP 6: Act out the next step in each monster's AI routine (this is a work-in-progress)
-    fs = fs + 1
+    'STEP 5: Act out the next step in each monster's AI routine (this is a work-in-progress)
+    fs = fs + 1: qp = 0: pq = 0
     IF fs = 5 THEN 'Bugfix: all other enemies keep moving, even after one has stopped, for whatever reason
         FOR ai = 0 TO (atm - 1)
             IF slidecount% = 0 AND MnS(ai, 5) = 1 THEN
@@ -1443,13 +1437,18 @@ DO
                 'IF MnS(ai, 4) > 0 THEN '<-- See if moving where this is checked breaks anything.
                 IF TrigPos(ai, 1) = "L" THEN
                     'LOCATE 2, 1: PRINT "PUT IT OUT!!!": _DISPLAY
-                    qp = VAL(TrigPos(ai, 2)): pq = VAL(TrigPos(ai, 3))
+                    'qp = VAL(TrigPos(ai, 2)): pq = VAL(TrigPos(ai, 3))
+                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 0) / 8
+                    LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq - 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq - 1)): _DISPLAY
+                    IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
+                    IF MnS(ai, 0) MOD 8 > 3 THEN pq = pq - 1
                     IF MnS(ai, 4) = 0 OR pq = 0 THEN 'Found the leftmost side of the map? Turn around.
                         TrigPos(ai, 1) = "R"
-                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp, pq - 1) = 0 THEN 'Found the edge of the platform? Turn around.
+                    ELSEIF LevelData(vert% + (qp + 1), pq - 1) < 1 OR LevelData(vert% + (qp + 1), pq - 1) > 2 THEN
+                        'Found the edge of the platform/wall? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) + 1: MnS(ai, 1) = MnS(ai, 1) + 1: MnS(ai, 4) = MnS(ai, 4) + 1
                         TrigPos(ai, 1) = "R"
-                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp - 1, pq - 1) = 2 THEN 'A wall in front of you? Turn around.
+                    ELSEIF LevelData(vert% + qp, pq - 1) = 2 THEN 'A wall in front of you? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) + 1: MnS(ai, 1) = MnS(ai, 1) + 1: MnS(ai, 4) = MnS(ai, 4) + 1
                         TrigPos(ai, 1) = "R"
                     ELSE 'Nothing stopping you from moving? Keep going.
@@ -1461,11 +1460,16 @@ DO
                     'MnP(ai) = MnP(ai) + 1: IF MnP(ai) = 0 THEN TrigPos(ai, 1) = "R"
                 ELSEIF TrigPos(ai, 1) = "R" THEN
                     'LOCATE 2, 1: PRINT "IT'S STILL BURNING!!!": _DISPLAY
-                    qp = VAL(TrigPos(ai, 2)): pq = VAL(TrigPos(ai, 3))
-                    IF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp, pq + 1) = 0 THEN 'Found the edge of the platform? Turn around.
+                    'qp = VAL(TrigPos(ai, 2)): pq = VAL(TrigPos(ai, 3))
+                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 1) / 8
+                    LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq + 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq + 1)): _DISPLAY
+                    IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
+                    IF MnS(ai, 1) MOD 8 > 3 THEN pq = pq - 1
+                    IF LevelData(vert% + (qp + 1), pq + 1) < 1 OR LevelData(vert% + (qp + 1), pq + 1) > 2 THEN
+                        'Found the edge of the platform/wall? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
                         TrigPos(ai, 1) = "L"
-                    ELSEIF MnS(ai, 4) MOD 8 = 0 AND LevelData(qp - 1, pq + 1) = 2 THEN 'A wall in front of you? Turn around.
+                    ELSEIF LevelData(vert% + qp, pq + 1) = 2 THEN 'A wall in front of you? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
                         TrigPos(ai, 1) = "L"
                     ELSE 'Nothing stopping you from moving? Keep going.
@@ -1481,6 +1485,12 @@ DO
         NEXT ai
         fs = 0
     END IF
+
+    'STEP 6: Check for player input, to decide what to do, next
+
+    'TODO: Figure out how to reset the animation to the standing sprite, if the player stops moving.
+    kp& = _KEYHIT 'For any extra keys that don't need to be held down to work.
+    IF cont% = 0 THEN GOSUB KeyCtrlCheck ELSE GOSUB JoyCtrlCheck
 
     '** Change for alpha 11: DEBUG keys are permanently mapped to the keyboard, and moved here.
 
@@ -3478,7 +3488,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         IF Quadrant = 0 THEN 'The main menu.
             DRAW "C" + STR$(&HFFFFFFFF) + " BM133,90": Font "START"
             DRAW "C" + STR$(&HFF333333) + " BM122,100": Font "CONTINUE"
-            DRAW "C" + STR$(&HFF333333) + " BM136,110": Font "SAVE"
+            DRAW "C" + STR$(&HFF333333) + " BM136,110": Font "SAVE" '<-- What should I change this option to?
             DRAW "C" + STR$(&HFFFFFFFF) + " BM126,120": Font "OPTIONS"
             DRAW "C" + STR$(&HFF333333) + " BM111,130": Font "LEADERBOARD"
             DRAW "C" + STR$(&HFFFFFFFF) + " BM107,145": Font "EXIT THE DEMO"
@@ -3486,7 +3496,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
             DRAW "C" + STR$(&HFFFFFFFF) + " BM80,85": Font "START FROM WHICH LEVEL?"
             DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 1", 110
             DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 2", 120
-            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 3", 130
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 3", 130
         ELSEIF Quadrant = 2 THEN 'The options in the "Options" menu.
             DRAW "C" + STR$(&HFFFFFFFF) + " BM126,65": Font "OPTIONS"
             DRAW "C" + STR$(&HFFFFFFFF) + " BM1,75": Font "WEAPON OF CHOICE"
@@ -3512,14 +3522,14 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
 
         'First row is the main menu.
         IF Highlight = 1 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM133,90": Font "START"
-        'Initially skipping "CONTINUE" and "SAVE" for the tech demo only.
+        'Initially skipping "CONTINUE", but "SAVE" should be changed, because you can't save from the main menu.
         IF Highlight = 2 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM126,120": Font "OPTIONS"
         '...and "LEADERBOARD", since that'll be another full game feature
         IF Highlight = 3 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM107,145": Font "EXIT THE DEMO"
         'Second row is the options in the "Start" (new game) menu. I might replace this with an overworld map.
         IF Highlight = 4 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 1", 110
         IF Highlight = 5 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 2", 120
-        IF Highlight = 6 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 3", 130
+        IF Highlight = 6 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 3", 130
         'Third row is the options in the "Options" menu.
         IF Highlight = 7 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,75": Font "WEAPON OF CHOICE"
         IF Highlight = 8 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,85": Font "RECONFIGURE CONTROLS"
@@ -3704,9 +3714,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     'BGM(2) = respath$ + bgmfldr$ + "Birdo.mp3"
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
                     EXIT DO
-                CASE 6 'Start > Subcon 3 (soon to be replaced with Phringdott 3, when I get to a playable alpha)
+                CASE 6 'Start > Phringdott 3 (I have an idea for a level, that will either be here, or Phringdott 4)
                     _SNDPLAY SEF(4)
-                    zone$ = "SUBCON 3"
+                    zone$ = "PHRINGDOTT 3"
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
                     LevelData$ = respath$ + "WLDXL3LD.KMD"
                     Foreground1$ = respath$ + "WLDXL3F1.KMD"
