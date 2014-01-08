@@ -137,7 +137,7 @@ DECLARE SUB CricketMenu ()
 '** GLOBAL VARIABLES
 COMMON SHARED zone$, score&, lives, amp%, tick, scrcnt%, vert%, actbgm%, bgm&, prevbgm%, dh
 COMMON SHARED ckHurt&, respath$, sprfldr$, chrfldr$, bgmfldr$, sndfldr$, ext$, monfldr$
-COMMON SHARED CKL%, CKR%, CKT%, CKB%, CKX%, cont%, gp%, pn, lvname$, msn, ct, res, atk, adm, atm
+COMMON SHARED CKL%, CKR%, CKT%, CKB%, CKX%, cont%, gp%, pn, lvname$, msn, ct, res, atk, adm, atm, fsx
 COMMON SHARED LevelData$, Background1$, Background2$, Foreground1$, Foreground2$, ActionDef$, ActionTable$
 '** MOVEMENT KEYS
 COMMON SHARED MoveUp AS LONG, ActionUp AS INTEGER
@@ -688,6 +688,7 @@ SCREEN _NEWIMAGE(320, 240, 32)
 'IF NOT _FULLSCREEN THEN _FULLSCREEN _OFF 'Windowed mode if fullscreen fails.
 
 ON ERROR GOTO 0 ' Kill the error-trapping subroutine (should we keep this?)
+fsx = 1
 CALL HardwareCheck ' The "tech demo intro message" only. The rest is skipped.
 CALL FlameWareLogo ' FLAMEWARE PRESENTS screen
 
@@ -1414,7 +1415,7 @@ DO
 						MnS(ai, 1) = MnS(ai, 1) - 1
 						MnS(ai, 4) = MnS(ai, 4) - 1
 						IF MnS(ai, 4) MOD 8 = 0 THEN g = VAL(TrigPos(ai, 3)): g = g - 1: TrigPos(ai, 3) = STR$(g)
-						MnP(ai) = MnP(ai + 1: IF MnP(ai) = 0 THEN TrigPos(ai, 1) = "R"
+						MnP(ai) = MnP(ai) + 1: IF MnP(ai) = 0 THEN TrigPos(ai, 1) = "R"
 					ELSEIF TrigPos(ai, 1) = "R" AND MnP(ai) >= 0 THEN
 						MnS(ai, 0) = MnS(ai, 0) + 1
 						MnS(ai, 1) = MnS(ai, 1) + 1
@@ -3417,7 +3418,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
             DRAW "C" + STR$(&HFFFFFFFF) + " BM80,85": Font "START FROM WHICH LEVEL?"
             DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 1", 110
             DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 2", 120
-            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 3", 130
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 3", 130
         ELSEIF Quadrant = 2 THEN 'The options in the "Options" menu.
             DRAW "C" + STR$(&HFFFFFFFF) + " BM126,65": Font "OPTIONS"
             DRAW "C" + STR$(&HFFFFFFFF) + " BM1,75": Font "WEAPON OF CHOICE"
@@ -3450,7 +3451,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         'Second row is the options in the "Start" (new game) menu. I might replace this with an overworld map.
         IF Highlight = 4 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 1", 110
         IF Highlight = 5 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 2", 120
-        IF Highlight = 6 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 3", 130
+        IF Highlight = 6 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 3", 130
         'Third row is the options in the "Options" menu.
         IF Highlight = 7 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,75": Font "WEAPON OF CHOICE"
         IF Highlight = 8 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,85": Font "RECONFIGURE CONTROLS"
@@ -3520,7 +3521,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
                     _FULLSCREEN _OFF 'Go back to windowed mode (if it's not)
                     SYSTEM 'Exit the demo
-                CASE 4 'Start > Subcon 1 (soon to re berplaced withi Phringdott 1, when I get to a playable alpha)
+                CASE 4 'Start > Subcon 1 (soon to be replaced with Phringdott 1, when I get to a playable alpha)
                     _SNDPLAY SEF(4)
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
                     zone$ = "SUBCON 1" 'Zone code
@@ -3635,9 +3636,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     'BGM(2) = respath$ + bgmfldr$ + "Birdo.mp3"
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
                     EXIT DO
-                CASE 6 'Start > Subcon 3 (soon to be replaced with Phringdott 3, when I get to a playable alpha)
+                CASE 6 'Start > Phringdott 3 (I'm planning a new map, that'll either be here, or Phringdott 4)
                     _SNDPLAY SEF(4)
-                    zone$ = "SUBCON 3"
+                    zone$ = "PHRINGDOTT 3"
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
                     LevelData$ = respath$ + "WLDXL3LD.KMD"
                     Foreground1$ = respath$ + "WLDXL3F1.KMD"
@@ -4807,7 +4808,8 @@ END SUB
 SUB FadeIn ()
 IF picture& THEN _FREEIMAGE plcture& 'Clear it, if it hasn't already been done
 picture& = _COPYIMAGE(0) 'Question is, can I do this if the screen is blank?
-FOR b = 255 TO 0 STEP -1
+fsw = fsx - fsx
+FOR b = 255 TO 0 STEP fsw
     _LIMIT 290 'Control the speed (good for fast PCs; how about slower ones?)
     _PUTIMAGE (0, 0), picture& 'Put the old image back up
     LINE (0, 0)-(319, 239), _RGBA32(0, 0, 0, b), BF 'Slowly fade in from black
@@ -4819,12 +4821,19 @@ END SUB
 SUB FadeOut ()
 _DISPLAY 'Stop the screen from automatically updating every millisecond
 picture& = _COPYIMAGE(0) 'Get a picture of what's on the screen, now
-FOR a = 0 TO 255
+LET TINow! = TIMER
+FOR a = 0 TO 255 STEP fsx
     _LIMIT 290 'Control the speed (good for fast PCs; how about slower ones?)
     _PUTIMAGE (0, 0), picture& 'Put the old image back up
     LINE (0, 0)-(319, 239), _RGBA32(0, 0, 0, a), BF 'Slowly fade to black
     _DISPLAY 'Draw the screen again, each turn
 NEXT a
+LET CChk! = TIMER
+LET WITime! = CChk! - TINow!
+IF fsx = 1 THEN
+	IF WITime! > 3 THEN fsx = 3
+	IF WITime! > 2 THEN fsx = 2
+END IF
 END SUB
 
 FUNCTION ButtonDef$ (btncode AS LONG)
