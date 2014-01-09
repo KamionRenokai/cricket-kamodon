@@ -1444,7 +1444,7 @@ DO
                     IF MnS(ai, 0) MOD 8 > 3 THEN pq = pq - 1
                     IF MnS(ai, 4) = 0 OR pq = 0 THEN 'Found the leftmost side of the map? Turn around.
                         TrigPos(ai, 1) = "R"
-                    ELSEIF LevelData(vert% + (qp + 1), pq - 1) < 1 OR LevelData(vert% + (qp + 1), pq - 1) > 2 THEN
+                    ELSEIF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
                         'Found the edge of the platform/wall? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) + 1: MnS(ai, 1) = MnS(ai, 1) + 1: MnS(ai, 4) = MnS(ai, 4) + 1
                         TrigPos(ai, 1) = "R"
@@ -1465,11 +1465,11 @@ DO
                     LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq + 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq + 1)): _DISPLAY
                     IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
                     IF MnS(ai, 1) MOD 8 > 3 THEN pq = pq - 1
-                    IF LevelData(vert% + (qp + 1), pq + 1) < 1 OR LevelData(vert% + (qp + 1), pq + 1) > 2 THEN
+                    IF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
                         'Found the edge of the platform/wall? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
                         TrigPos(ai, 1) = "L"
-                    ELSEIF LevelData(vert% + qp, pq + 1) = 2 THEN 'A wall in front of you? Turn around.
+                    ELSEIF LevelData(vert% + qp, pq) = 2 THEN 'A wall in front of you? Turn around.
                         'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
                         TrigPos(ai, 1) = "L"
                     ELSE 'Nothing stopping you from moving? Keep going.
