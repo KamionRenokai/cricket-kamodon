@@ -1398,13 +1398,7 @@ DO
         IF slidecount% = 0 AND jdset THEN jdrop = 1: jdset = 0
     END IF
 
-    'STEP 5: Check for player input, to decide what to do, next
-
-    'TODO: Figure out how to reset the animation to the standing sprite, if the player stops moving.
-    kp& = _KEYHIT 'For any extra keys that don't need to be held down to work.
-    IF cont% = 0 THEN GOSUB KeyCtrlCheck ELSE GOSUB JoyCtrlCheck
-	
-	'STEP 6: Act out the next step in each monster's AI routine (this is a work-in-progress)
+	'STEP 5: Act out the next step in each monster's AI routine (this is a work-in-progress)
 	fs = fs + 1
 	IF fs = 5 THEN 'Bugfix: all other enemies keep moving, even after one has stopped, for whatever reason
 		FOR ai = 0 TO (atm - 1)
@@ -1429,6 +1423,12 @@ DO
 		fs = 0
 	END IF
 
+    'STEP 6: Check for player input, to decide what to do, next
+
+    'TODO: Figure out how to reset the animation to the standing sprite, if the player stops moving.
+    kp& = _KEYHIT 'For any extra keys that don't need to be held down to work.
+    IF cont% = 0 THEN GOSUB KeyCtrlCheck ELSE GOSUB JoyCtrlCheck
+	
     '** Change for alpha 11: DEBUG keys are permanently mapped to the keyboard, and moved here.
 
     IF kp& = MoveExit THEN 'ESC ends our fancy little simulation.
@@ -4808,8 +4808,7 @@ END SUB
 SUB FadeIn ()
 IF picture& THEN _FREEIMAGE plcture& 'Clear it, if it hasn't already been done
 picture& = _COPYIMAGE(0) 'Question is, can I do this if the screen is blank?
-fsw = fsx - fsx
-FOR b = 255 TO 0 STEP fsw
+FOR b = 255 TO 0 STEP (fsx - (fsx * 2)) 'The frameskip technique affects this, too.
     _LIMIT 290 'Control the speed (good for fast PCs; how about slower ones?)
     _PUTIMAGE (0, 0), picture& 'Put the old image back up
     LINE (0, 0)-(319, 239), _RGBA32(0, 0, 0, b), BF 'Slowly fade in from black
@@ -4821,8 +4820,8 @@ END SUB
 SUB FadeOut ()
 _DISPLAY 'Stop the screen from automatically updating every millisecond
 picture& = _COPYIMAGE(0) 'Get a picture of what's on the screen, now
-LET TINow! = TIMER
-FOR a = 0 TO 255 STEP fsx
+LET TINow! = TIMER 'Since FadeOut is usually called first, it gets to test the frame rate.
+FOR a = 0 TO 255 STEP fsx '"fsx" changes depending on how slow the computer is.
     _LIMIT 290 'Control the speed (good for fast PCs; how about slower ones?)
     _PUTIMAGE (0, 0), picture& 'Put the old image back up
     LINE (0, 0)-(319, 239), _RGBA32(0, 0, 0, a), BF 'Slowly fade to black
@@ -4830,7 +4829,8 @@ FOR a = 0 TO 255 STEP fsx
 NEXT a
 LET CChk! = TIMER
 LET WITime! = CChk! - TINow!
-IF fsx = 1 THEN
+IF fsx = 1 THEN 'If the screen takes longer than 1.5 seconds to fade out, we'll speed it up.
+	IF WITime! > 4 THEN fsx = 4
 	IF WITime! > 3 THEN fsx = 3
 	IF WITime! > 2 THEN fsx = 2
 END IF
