@@ -1433,52 +1433,39 @@ DO
     IF fs = 5 THEN 'Bugfix: all other enemies keep moving, even after one has stopped, for whatever reason
         FOR ai = 0 TO (atm - 1)
             IF slidecount% = 0 AND MnS(ai, 5) = 1 THEN
-                'LOCATE 1, 1: PRINT "FYRE!!!": _DISPLAY
                 'IF MnS(ai, 4) > 0 THEN '<-- See if moving where this is checked breaks anything.
                 IF TrigPos(ai, 1) = "L" THEN
-                    'LOCATE 2, 1: PRINT "PUT IT OUT!!!": _DISPLAY
-                    'qp = VAL(TrigPos(ai, 2)): pq = VAL(TrigPos(ai, 3))
-                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 0) / 8
-                    LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq - 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq - 1)): _DISPLAY
+                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 4) / 8 'pq = (MnS(ai, 0) + 8) / 8
+                    'LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq - 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq)): _DISPLAY
                     IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
-                    IF MnS(ai, 0) MOD 8 > 3 THEN pq = pq - 1
+                    IF MnS(ai, 4) MOD 8 > 3 THEN pq = pq - 1
                     IF MnS(ai, 4) = 0 OR pq = 0 THEN 'Found the leftmost side of the map? Turn around.
                         TrigPos(ai, 1) = "R"
                     ELSEIF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
-                        'Found the edge of the platform/wall? Turn around.
-                        'MnS(ai, 0) = MnS(ai, 0) + 1: MnS(ai, 1) = MnS(ai, 1) + 1: MnS(ai, 4) = MnS(ai, 4) + 1
-                        TrigPos(ai, 1) = "R"
-                    ELSEIF LevelData(vert% + qp, pq - 1) = 2 THEN 'A wall in front of you? Turn around.
-                        'MnS(ai, 0) = MnS(ai, 0) + 1: MnS(ai, 1) = MnS(ai, 1) + 1: MnS(ai, 4) = MnS(ai, 4) + 1
-                        TrigPos(ai, 1) = "R"
+                        TrigPos(ai, 1) = "R" 'Found the edge of the platform/wall? Turn around.
+                    ELSEIF LevelData(vert% + qp, pq - 1) = 2 THEN
+                        TrigPos(ai, 1) = "R" 'A wall in front of you? Turn around.
                     ELSE 'Nothing stopping you from moving? Keep going.
                         MnS(ai, 0) = MnS(ai, 0) - 1
                         MnS(ai, 1) = MnS(ai, 1) - 1
                         MnS(ai, 4) = MnS(ai, 4) - 1
                     END IF
                     IF MnS(ai, 4) MOD 8 = 0 THEN g = VAL(TrigPos(ai, 3)): g = g - 1: TrigPos(ai, 3) = STR$(g)
-                    'MnP(ai) = MnP(ai) + 1: IF MnP(ai) = 0 THEN TrigPos(ai, 1) = "R"
                 ELSEIF TrigPos(ai, 1) = "R" THEN
-                    'LOCATE 2, 1: PRINT "IT'S STILL BURNING!!!": _DISPLAY
-                    'qp = VAL(TrigPos(ai, 2)): pq = VAL(TrigPos(ai, 3))
-                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 1) / 8
-                    LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq + 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq + 1)): _DISPLAY
+                    qp = (MnS(ai, 3) - 32) / 8: pq = (MnS(ai, 4) + _WIDTH(MonsterAnim(VAL(TrigPos(ai, 0)), 0, 0))) / 8 'pq = MnS(ai, 1) / 8
+                    'LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq + 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq)): _DISPLAY
                     IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
-                    IF MnS(ai, 1) MOD 8 > 3 THEN pq = pq - 1
+                    IF (MnS(ai, 4) + _WIDTH(MonsterAnim(VAL(TrigPos(ai, 0)), 0, 0))) MOD 8 > 3 THEN pq = pq - 1
                     IF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
-                        'Found the edge of the platform/wall? Turn around.
-                        'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
-                        TrigPos(ai, 1) = "L"
-                    ELSEIF LevelData(vert% + qp, pq) = 2 THEN 'A wall in front of you? Turn around.
-                        'MnS(ai, 0) = MnS(ai, 0) - 1: MnS(ai, 1) = MnS(ai, 1) - 1: MnS(ai, 4) = MnS(ai, 4) - 1
-                        TrigPos(ai, 1) = "L"
+                        TrigPos(ai, 1) = "L" 'Found the edge of the platform/wall? Turn around.
+                    ELSEIF LevelData(vert% + qp, pq) = 2 THEN
+                        TrigPos(ai, 1) = "L" 'A wall in front of you? Turn around.
                     ELSE 'Nothing stopping you from moving? Keep going.
                         MnS(ai, 0) = MnS(ai, 0) + 1
                         MnS(ai, 1) = MnS(ai, 1) + 1
                         MnS(ai, 4) = MnS(ai, 4) + 1
                     END IF
                     IF MnS(ai, 4) MOD 8 = 0 THEN g = VAL(TrigPos(ai, 3)): g = g + 1: TrigPos(ai, 3) = STR$(g)
-                    'MnP(ai) = MnP(ai) + 1: IF MnP(ai) = 48 THEN MnP(ai) = -48: TrigPos(ai, 1) = "L"
                 END IF
             END IF
             'END IF
