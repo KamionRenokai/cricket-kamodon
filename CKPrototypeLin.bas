@@ -896,7 +896,6 @@ FOR t = 0 TO (atm - 1) 'Set up each enemy (work-in-progress)
     'MnS(t, 2) = (VAL(TrigPos(t, 2)) - (dvs * 27)) * 8 '(VAL(TrigPos(t, 2)) - vert%) * 8
     'MnS(t, 3) = MnS(t, 2) + _HEIGHT(MonsterAnim(j%, 0, 0))
     MnS(t, 4) = VAL(TrigPos(t, 3)) * 8 'Except the global X coordinate. The spawning routine doesn't touch this, yet.
-    IF TrigPos(t, 1) = "L" THEN MnP(t) = -48 'Little quick bugfix for monsters that spawn facing left.
 NEXT t
 
 'First, we see how many times we'll have to run through a loop, and grab the
@@ -1289,7 +1288,6 @@ DO
             END IF
         NEXT o
     NEXT q
-    '_SNDPLAYFILE "/media/Lexar/PROJECTS/CRICKET/SOUND/MESSAGE-B_Accept.wav", 1, 1: jk = 1
 
     '** CRICKET KAMODON
     IF pf THEN 'I WAS using Knuckles the Echidna to test this, but my brother suggested someone different...
@@ -1657,7 +1655,7 @@ IF atk = -1 AND _KEYDOWN(MoveLeft) AND slidecount% = 0 THEN 'I should probably r
                     MnS(n, 0) = MnS(n, 0) + 1
                     MnS(n, 1) = MnS(n, 1) + 1
                     IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
-                    IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
+                    'IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
                 END IF
             NEXT n
             'ELSEIF CKL% < 148 THEN
@@ -1779,7 +1777,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveRight) AND slidecount% = 0 THEN
                     MnS(n, 0) = MnS(n, 0) - 1
                     MnS(n, 1) = MnS(n, 1) - 1
                     IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) - 1
-                    IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
+                    'IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
                 END IF
             NEXT n
         ELSEIF CKL% < 148 OR str = 27 AND CKR% < 319 THEN
