@@ -229,7 +229,7 @@ SEF(2) = _SNDOPEN(respath$ + sndfldr$ + "StereoEcho1UP.ogg", "VOL,SYNC")
 SEN(2) = "Cricket Gets a 1UP -- www.freesfx.co.uk"
 SEF(3) = _SNDOPEN(respath$ + sndfldr$ + "CKDeathSymphony.ogg", "VOL,SYNC")
 SEN(3) = "Cricket Dies -- L. von Beethoven, Musopen"
-SEF(4) = _SNDOPEN(respath$ + sndfldr$ + "CKVertMalletSwing.ogg", "VOL,SYNC")
+SEF(4) = _SNDOPEN(respath$ + sndfldr$ + "CKVertMalletHit.ogg", "VOL,SYNC")
 SEN(4) = "Vertical Mallet Smack with no Amp -- Vladimir"
 SEF(5) = 0
 SEN(5) = "Vertical Mallet Smack with One-Fourth Amp -- Not Set"
@@ -237,8 +237,8 @@ SEF(6) = 0
 SEN(6) = "Vertical Mallet Smack with One-Half Amp -- Not Set"
 SEF(7) = 0
 SEN(7) = "Vertical Mallet Smack with Full Amp -- Not Set"
-SEF(8) = _SNDOPEN(respath$ + sndfldr$ + "CKHorizMalletSwing.ogg", "VOL,SYNC")
-SEN(8) = "Horizontal Mallet Smack with no Amp"
+SEF(8) = _SNDOPEN(respath$ + sndfldr$ + "CKHorizMalletHit.ogg", "VOL,SYNC")
+SEN(8) = "Horizontal Mallet Smack with no Amp -- Independent.nu"
 SEF(9) = 0
 SEN(9) = "Horizontal Mallet Smack with One-Fourth Amp -- Not Set"
 SEF(10) = 0
@@ -255,10 +255,10 @@ SEF(15) = _SNDOPEN(respath$ + sndfldr$ + "TimeRunningOut.ogg", "VOL,SYNC")
 SEN(15) = "Time is Running Out"
 SEF(16) = _SNDOPEN(respath$ + sndfldr$ + "TimeUpBuzzer.ogg", "VOL,SYNC")
 SEN(16) = "Out of Time"
-SEF(17) = 0
-SEN(17) = "Vertical Mallet Smack That Hits Nothing -- Not Set"
+SEF(17) = _SNDOPEN(respath$ + sndfldr$ + "CKVertMalletMiss.ogg", "VOL,SYNC")
+SEN(17) = "Vertical Mallet Swing And Miss -- Iwan 'qubodup' Gabovitch"
 SEF(18) = _SNDOPEN(respath$ + sndfldr$ + "CKHorizMalletMiss.ogg", "VOL,SYNC")
-SEN(18) = "Horizontal Mallet Smack That Hits Nothing -- www.freesfx.co.uk"
+SEN(18) = "Horizontal Mallet Swing And Miss -- www.freesfx.co.uk"
 ckHurt& = _SNDOPEN(respath$ + sndfldr$ + "SQPauseSound.ogg", "VOL,SYNC")
 
 COLOR 15, 0: PRINT "CHECK!"
@@ -1654,7 +1654,7 @@ IF atk = -1 AND _KEYDOWN(MoveLeft) AND slidecount% = 0 THEN 'I should probably r
                 IF MnS(n, 5) = 1 THEN
                     MnS(n, 0) = MnS(n, 0) + 1
                     MnS(n, 1) = MnS(n, 1) + 1
-                    IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
+                    'IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
                     'IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
                 END IF
             NEXT n
@@ -1776,7 +1776,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveRight) AND slidecount% = 0 THEN
                 IF MnS(n, 5) = 1 THEN
                     MnS(n, 0) = MnS(n, 0) - 1
                     MnS(n, 1) = MnS(n, 1) - 1
-                    IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) - 1
+                    'IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) - 1
                     'IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
                 END IF
             NEXT n
@@ -2030,7 +2030,7 @@ ELSEIF atk > -1 THEN
     IF atk < 6 THEN plyr& = CrickAtk(atk): CKT% = CKB% - _HEIGHT(CrickAtk(atk)): CKR% = CKL% + _WIDTH(CrickAtk(atk)) - 1
     aa = aa + 1
     IF aa = 10 THEN aa = 0: atk = atk + 1 'Changing "aa = 10" speeds up, or slows down, the attacking animation.
-    IF atk = 4 AND aa = 0 THEN _SNDPLAY SEF(4) 'The "AND aa = 0" stops it from playing that sound continuously.
+    IF atk = 4 AND aa = 0 THEN _SNDPLAY SEF(17) 'The "AND aa = 0" stops it from playing that sound continuously.
     IF atk = 6 THEN atk = -1: plyr& = last&: CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1
     'END IF
 
@@ -2216,7 +2216,7 @@ IF atk > -1 THEN 'If you pressed the ATTACK button/thumbstick while standing sti
     IF atk < 6 THEN plyr& = CrickAtk(atk): CKT% = CKB% - _HEIGHT(CrickAtk(atk)): CKR% = CKL% + _WIDTH(CrickAtk(atk)) - 1
     aa = aa + 1
     IF aa = 10 THEN aa = 0: atk = atk + 1 'Changing "aa = 10" speeds up, or slows down, the attacking animation.
-    IF atk = 4 AND aa = 0 THEN _SNDPLAY SEF(4)
+    IF atk = 4 AND aa = 0 THEN _SNDPLAY SEF(17)
     IF atk = 6 THEN atk = -1: plyr& = last&: CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1
 END IF
 
@@ -2647,6 +2647,7 @@ IF noblock > 3 AND CKX% > 0 THEN 'If nothing's in our way, let's move!
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 0) = MnS(n, 0) + 1
                 MnS(n, 1) = MnS(n, 1) + 1
+                IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
                 IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
             END IF
         NEXT n
@@ -2704,6 +2705,7 @@ IF noblock > 3 THEN 'If nothing's in our way, where do we move?
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 0) = MnS(n, 0) - 1
                 MnS(n, 1) = MnS(n, 1) - 1
+                IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) - 1
                 IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
             END IF
         NEXT n
@@ -3715,7 +3717,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     OPEN Foreground2$ FOR INPUT AS #2
                     OPEN Background1$ FOR INPUT AS #3
                     OPEN Background2$ FOR INPUT AS #4
-                    'Quick check, to see how many songs should be loaded
+                    OPEN ActionDef$ FOR INPUT AS #6
+                    OPEN ActionTable$ FOR INPUT AS #7
+                    'First quick check: see how many songs should be loaded
                     FOR x = 0 TO 5 'Skip over the first six settings
                         INPUT #5, stuff$
                     NEXT x
@@ -3725,7 +3729,21 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         IF LEN(song$) > 3 THEN msn = msn + 1 ELSE EXIT DO
                     LOOP
                     'TODO: Throw an error if more than 10 songs are found.
+                    adm = 0: atm = 0
+                    'Second quick check: how many monsters are in the action def file? (WIP)
+                    DO UNTIL EOF(6) 'WIP: Grab three variables each, for right now.
+                        INPUT #6, a$, b$, c$
+                        adm = adm + 1 'Set the maximum number
+                    LOOP
+                    'Third quick check: how many entries are in the action table? (WIP)
+                    DO UNTIL EOF(7) 'WIP: Grab four variables each, for right now.
+                        INPUT #7, j$, k$, l$, m$
+                        atm = atm + 1 'Set the maximum number
+                    LOOP
+                    'Close and re-open level data, action def and action table, to start from the beginning
                     CLOSE #5: OPEN LevelData$ FOR INPUT AS #5
+                    CLOSE #6: OPEN ActionDef$ FOR INPUT AS #6
+                    CLOSE #7: OPEN ActionTable$ FOR INPUT AS #7
                     'Now we read the level data, for real!
                     INPUT #5, lvname$ 'The name of the level
                     INPUT #5, clock$ 'How high to set the clock
@@ -3741,8 +3759,8 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     CKT% = VAL(starty$) 'Set Cricket's starting Y coordinate
                     IF actbgm% >= 0 AND bgm& THEN _SNDCLOSE bgm&
                     FOR sf = 0 TO (msn - 1) 'Get each song filename.
-                        INPUT #5, sf$ 'This way, the file is positioned at
-                        BGM(sf) = sf$ 'the level data, where we need it.
+                        INPUT #5, sf$ 'This way, the file is positioned at the level data, where we need it.
+                        BGM(sf) = respath$ + bgmfldr$ + sf$ 'Should all music be loaded from the MUSIC folder?
                     NEXT sf
                     'BGM(0) = "/media/PHANTOM/IMPULSE/SOTRFALT.IT"
                     'BGM(1) = respath$ + bgmfldr$ + "SubUnderworld.mp3"
