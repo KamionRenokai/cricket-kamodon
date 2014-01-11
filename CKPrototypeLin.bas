@@ -2541,6 +2541,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         FadeOut 'Fade to black
                         _FREEIMAGE ps& 'Get rid of the saved image of the screen
                         res = 1 'So the game will know that it doesn't have to DIM critical graphics engine arrays
+                        RecSpot = 0: Sector = 0: Selector = 1 'Bugfix: wrong options displayed after exit to menu
                         GOTO LoopBack 'Return to the main menu (I can, from a subroutine, without messing things up!)
                     END IF
                 CASE 16 'No, wait! Not yet!
