@@ -1433,7 +1433,7 @@ DO
             IF slidecount% = 0 AND MnS(ai, 5) = 1 THEN
                 'IF MnS(ai, 4) > 0 THEN '<-- See if moving where this is checked breaks anything.
                 IF TrigPos(ai, 1) = "L" THEN
-                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 4) / 8 'pq = (MnS(ai, 0) + 8) / 8
+                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 4) / 8
                     'LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq - 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq)): _DISPLAY
                     IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
                     IF MnS(ai, 4) MOD 8 > 3 THEN pq = pq - 1
@@ -2687,8 +2687,8 @@ IF noblock > 3 AND CKX% > 0 THEN 'If nothing's in our way, let's move!
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 0) = MnS(n, 0) + 1
                 MnS(n, 1) = MnS(n, 1) + 1
-                IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
-                IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
+                'IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
+                'IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
             END IF
         NEXT n
         'ELSEIF CKL% < 148 THEN
@@ -2745,8 +2745,8 @@ IF noblock > 3 THEN 'If nothing's in our way, where do we move?
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 0) = MnS(n, 0) - 1
                 MnS(n, 1) = MnS(n, 1) - 1
-                IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) - 1
-                IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
+                'IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) - 1
+                'IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
             END IF
         NEXT n
     ELSEIF CKL% < 148 OR str = 27 AND CKR% < 319 THEN
