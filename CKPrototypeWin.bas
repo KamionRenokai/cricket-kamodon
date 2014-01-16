@@ -17,10 +17,10 @@
 ' in the SDL-License.txt file.
 '
 ' This is the multi-platform build, originally forked from the pseudo-Windows
-' build of CK Tech Demo alpha 3, after I moved the source code over to QB64
+' build of CK Prototype build 3, after I moved the source code over to QB64
 ' from QuickBASIC (PDS) 7.1. Aaron Severn's side-scrolling routine, and the
 ' fading routines from Mysterious Song were originally re-added, but were
-' later dropped, starting with alpha 9. I did make a few tweaks, though,
+' later dropped, starting with build 9. I did make a few tweaks, though,
 ' mainly borrowing bits and pieces of code from the engine I was originally
 ' going to build for the DOS version (and still might, if I decide to pick
 ' that project back up). But this one definitely runs without DOS, and
@@ -35,7 +35,7 @@
 '
 '
 ' LIST OF GAME FIXES I'VE DONE SO FAR (FOR REFERENCE):
-' alpha 0:  Ran out of space and memory using DATA and READ statements, and
+' build 0:  Ran out of space and memory using DATA and READ statements, and
 '           would even get a "Module level code too large" message.
 '     FIX:  Moved the hardware detection screen, FlameWare logo drawing
 '           commands and the Cricket Kamodon logo (and probably menu, soon)
@@ -43,7 +43,7 @@
 '           (WLDXL1BG.KMD for background, and WLDXL1FG.KMD for foreground;
 '           I'll follow the same method for the actual game (WLDAL1FG.KMD,
 '           WLDBL4FG.KMD, etc.)
-' alpha 1:  Background and foreground data file reader would get stuck at the
+' build 1:  Background and foreground data file reader would get stuck at the
 '           end of the first 22 lines in the data files (after 1024
 '           characters), and would start redrawing the level from the
 '           beginning, one row of sprites higher, about 3/4ths into the level.
@@ -54,7 +54,7 @@
 '           This also makes level design a bit more modder-friendly, since
 '           this game will be open-source, after all. The current code
 '           supports 110 rows of sprites.
-' alpha 3:  Iminent problem of not having enough room to put the actual engine
+' build 3:  Iminent problem of not having enough room to put the actual engine
 '           code into the main module, because of the DATA statements toward
 '           the end that draw each sprite.
 '     FIX:  Will soon have to add another subroutine for the sprite reader,
@@ -64,7 +64,7 @@
 '           some incredibly realistic animation, if done right. This will move
 '           the DATA statements that put the sprites into memory out of the
 '           source code, and make room for the actual engine code.
-' alpha 4:  Problem was averted with code conversion to QB64. This gets rid of
+' build 4:  Problem was averted with code conversion to QB64. This gets rid of
 '           QuickBASIC's old "module level code too large" error, because now
 '           I can put as much code in the main module as I want to, and I can
 '           even use new commands, and background music/sound effects without
@@ -77,20 +77,20 @@
 '           different possible sprites anyone can use on a map (no matter
 '           which sprite plane they're put onto). I also added a second
 '           background plane, so I can work on adding parallax scrolling.
-' alpha 6:  Going to add in vertical scrolling, but I have to figure out a way
+' build 6:  Going to add in vertical scrolling, but I have to figure out a way
 '           to implement it properly. The pixel drawing routine can't really
 '           handle vertical and horizontal scrolling in its current state.
 '     FIX:  Upgraded the drawing routine to be able to store multiple screens
 '           (more than 22 rows), and made the background/foreground resource
 '           files bigger, to accommodate this.
-' alpha 7:  Having three sprite layers (BG1, BG2 and FG1) might make it hard
+' build 7:  Having three sprite layers (BG1, BG2 and FG1) might make it hard
 '           to do parallax scrolling in the future, especially since I'm using
 '           BG1 for some of the background effects in Subcon 1.
 '     FIX:  Created a fourth sprite layer, which will become the new BG1. The
 '           original BG1 became BG2, the original BG2 became FG1, and the
 '           original FG1 became FG2. This should make it easier to at least
 '           do some sort of parallax scrolling with BG1.
-' alpha 8:  The playfield drawing routine seems to be pretty fast... on both
+' build 8:  The playfield drawing routine seems to be pretty fast... on both
 '           a dual-core processor, and a first-generation high-end Core i7.
 '           Testing the game both on a 2.2GHz Athlon 64, and a 1.6GHz(?)
 '           Athlon XP make the drawing speed slow down to a crawl.
@@ -99,7 +99,7 @@
 '           my own code, based on what he had wrote). It gives a huge speed
 '           increase on the Athlon 64 and Athlon XP, even though the XP isn't
 '           as fast as the 64. Still, that's an improvement.
-' alpha 9:  The new side-scrolling playfield routine was added, and further
+' build 9:  The new side-scrolling playfield routine was added, and further
 '           refined, taking out a few bugs that messed up the vertical
 '           scrolling if called incorrectly, as well as adding in doors, the
 '           ability to change the music (only for entering doors, for right
@@ -117,6 +117,30 @@
 '           the ESC key from just directly exiting the game, by giving it its
 '           own "Really Quit?" menu, and giving the Pause function a menu, as
 '           well.
+' build 10: Full pause menu added (well, mostly; just "Save" and "Load" don't
+'			work, but that's intentional, for the prototype), as well as the
+'			ability to change key mappings with the scheme preset, or using
+'			user-defined custom keys. Gamepad button/stick mappings can be
+'			changed, too, and the three scheme presets do, as well. After
+'			fixing a few bugs, you can even exit back to the main menu from
+'			within the game, but the ESC key still exits the game completely,
+'			as I've yet to put a quick menu in for it. And speaking of gamepads,
+'			I seriously need to rewrite the routines for playing the game with
+'			a gamepad, instead of a keyboard.
+'	  FIX:  Almost completely rewrote the gamepad routines, and loosened up the
+'			thumbstick controls (so you cna be about 4 or 5 degrees off the
+'			absolute top or bottom X or Y positions, and still have the game
+'			register that as a move/action), so now the game can be played with
+'			a gamepad! You can even change button and keymaps from within the
+'			pause menu, and use them instantly, even though I think there might
+'			be a bug, either with gamepad or keyboard mode, when doing that...
+'			And speaking of gamepad mode bugs, the routines are set up so that
+'			a player can set a movement or action to either a thumbstick, D-pad
+'			or a button, and have it still work. It works with movements (as the
+'			"PlayStation Controller" gamepad scheme preset sets the movement
+'			buttons to the D-pad, which respond as "buttons" to a computer), yet
+'			a few kinks appear, when trying to set an action, such as jumping, to
+'			a thumbstick, or the D-pad.
 
 DEFINT A-Z
 '$DYNAMIC
@@ -193,48 +217,47 @@ DIM SHARED BGM(0 TO 9) AS STRING
 'for the menus themselves, and when the level is loading, read from the level
 'data file, and REDIM the array without losing anything, and load the sounds
 DIM SHARED SEF(0 TO 18) AS LONG 'Handles for sound effects loaded into memory
-DIM SHARED SEN(0 TO 18) AS STRING 'The names of each sound effect
+'DIM SHARED SEN(0 TO 18) AS STRING 'The names of each sound effect
 
+'Core sound effect table (for right now; each level will get its own table, that's defined in its level data file)
+'FlameWare Zeronexe logo -- Xmuzik
 SEF(0) = _SNDOPEN(respath$ + sndfldr$ + "FlameWareLogo.ogg", "VOL,SYNC")
-SEN(0) = "FlameWare Zeronexe Logo -- Xmuzik"
+'Cricket jumps -- Mike Koenig
 SEF(1) = _SNDOPEN(respath$ + sndfldr$ + "CKJump.ogg", "VOL,SYNC")
-SEN(1) = "Cricket Jumps -- Mike Koenig"
-'Maybe I should have two hammer pound sounds: one for if there's nothing under
-'Cricket's hammer, and another if there is (like a monster, for example).
+'Cricket gets a 1UP -- http://www.freesfx.co.uk
 SEF(2) = _SNDOPEN(respath$ + sndfldr$ + "StereoEcho1UP.ogg", "VOL,SYNC")
-SEN(2) = "Cricket Gets a 1UP -- www.freesfx.co.uk"
+'Cricket dies -- original by Ludwig von Beethoven, performed by Musopen, sampled by Kamion Shanoriko
 SEF(3) = _SNDOPEN(respath$ + sndfldr$ + "CKDeathSymphony.ogg", "VOL,SYNC")
-SEN(3) = "Cricket Dies -- L. von Beethoven, Musopen"
-SEF(4) = _SNDOPEN(respath$ + sndfldr$ + "CKVertMalletSwing.ogg", "VOL,SYNC")
-SEN(4) = "Vertical Mallet Smack with no Amp -- Vladimir"
+'Cricket swings his mallet in front of him, with amp bar empty, and hits a monster -- Vladimir
+SEF(4) = _SNDOPEN(respath$ + sndfldr$ + "CKVertMalletHit.ogg", "VOL,SYNC")
+'Cricket swings his mallet in front of him, with amp bar at one-fourth, and hits a monster -- Not Set
 SEF(5) = 0
-SEN(5) = "Vertical Mallet Smack with One-Fourth Amp -- Not Set"
+'Cricket swings his mallet in front of him, with amp bar at one-half, and hits a monster -- Not Set
 SEF(6) = 0
-SEN(6) = "Vertical Mallet Smack with One-Half Amp -- Not Set"
+'Cricket swings his mallet in front of him, with amp bar full, and hits a monster -- Not Set
 SEF(7) = 0
-SEN(7) = "Vertical Mallet Smack with Full Amp -- Not Set"
-SEF(8) = _SNDOPEN(respath$ + sndfldr$ + "CKHorizMalletSwing.ogg", "VOL,SYNC")
-SEN(8) = "Horizontal Mallet Smack with no Amp"
+'Cricket swings his mallet around him, with amp bar empty, and hits a monster -- Independent.nu
+SEF(8) = _SNDOPEN(respath$ + sndfldr$ + "CKHorizMalletHit.ogg", "VOL,SYNC")
+'Cricket swings his mallet around him, with amp bar at one-fourth, and hits a monster -- Not Set
 SEF(9) = 0
-SEN(9) = "Horizontal Mallet Smack with One-Fourth Amp -- Not Set"
+'Cricket swings his mallet around him, with amp bar at one-half, and hits a monster -- Not Set
 SEF(10) = 0
-SEN(10) = "Horizontal Mallet Smack with Half Amp -- Not Set"
+'Cricket swings his mallet around him, with amp bar full, and hits a monster -- Not Set
 SEF(11) = 0
-SEN(11) = "Horizontal Mallet Smack with Full Amp -- Not Set"
+'Cricket's amp bar increases -- http://www.freesfx.co.uk
 SEF(12) = _SNDOPEN(respath$ + sndfldr$ + "AmpBarUp.ogg", "VOL,SYNC")
-SEN(12) = "Cricket's Amp Bar Increases -- www.freesfx.co.uk"
+'Pause or unpause the game -- htp://www.freesfx.co.uk
 SEF(13) = _SNDOPEN(respath$ + sndfldr$ + "Alert3Pause.ogg", "VOL,SYNC")
-SEN(13) = "Pause or Unpause the Game -- www.freesfx.co.uk"
+'Remaining time on the clock is converted to points (I think I got this from that sound effect search engine)
 SEF(14) = _SNDOPEN(respath$ + sndfldr$ + "ClockTick.ogg", "VOL,SYNC")
-SEN(14) = "Convert Remaining Time to Points"
+'The clock is below 060 (using a generic klaxon alert that sounds like the one Figure It Out used)
 SEF(15) = _SNDOPEN(respath$ + sndfldr$ + "TimeRunningOut.ogg", "VOL,SYNC")
-SEN(15) = "Time is Running Out"
+'The clock ran out (I think I got this from that sound effect search engine)
 SEF(16) = _SNDOPEN(respath$ + sndfldr$ + "TimeUpBuzzer.ogg", "VOL,SYNC")
-SEN(16) = "Out of Time"
-SEF(17) = 0
-SEN(17) = "Vertical Mallet Smack That Hits Nothing -- Not Set"
+'Cricket swings his mallet in front of him, and misses -- Iwan 'qubodup' Gabovitch (opengameart.org/users/qubodup)
+SEF(17) = _SNDOPEN(respath$ + sndfldr$ + "CKVertMalletMiss.ogg", "VOL,SYNC")
+'Cricket swings his mallet around him, and misses -- http://www.freesfx.co.uk
 SEF(18) = _SNDOPEN(respath$ + sndfldr$ + "CKHorizMalletMiss.ogg", "VOL,SYNC")
-SEN(18) = "Horizontal Mallet Smack That Hits Nothing -- www.freesfx.co.uk"
 ckHurt& = _SNDOPEN(respath$ + sndfldr$ + "SQPauseSound.ogg", "VOL,SYNC")
 
 COLOR 15, 0: PRINT "CHECK!"
@@ -3771,34 +3794,34 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE")
                         _SNDLOOP bgm&
                     END IF
-                CASE 10 'Options > Sound Test ... should optimize this later.
+                CASE 10 'Options > Sound Test ... should I rewrite this part, or integrate it into myCrick?
                     _SNDPLAY SEF(4)
                     IF actbgm% >= 0 AND bgm& THEN _SNDPAUSE bgm& 'Better spot.
                     LINE (0, 59)-(320, 188), _RGBA32(0, 0, 0, 255), BF 'Erase the menu options.
                     DRAW "B M119,65 C" + STR$(&HFFFFFFFF)
                     Font "SOUND TEST"
                     DRAW "B M1,76"
-                    Font "00 " + UCASE$(SEN(0))
+                    'Font "00 " + UCASE$(SEN(0))
                     DRAW "B M1,86"
-                    Font "01 " + UCASE$(SEN(1))
+                    'Font "01 " + UCASE$(SEN(1))
                     DRAW "B M1,96"
-                    Font "02 " + UCASE$(SEN(2))
+                    'Font "02 " + UCASE$(SEN(2))
                     DRAW "B M1,106"
-                    Font "03 " + UCASE$(SEN(3))
+                    'Font "03 " + UCASE$(SEN(3))
                     DRAW "B M1,116"
-                    Font "04 " + UCASE$(SEN(4))
+                    'Font "04 " + UCASE$(SEN(4))
                     DRAW "B M1,126"
-                    Font "05 " + UCASE$(SEN(5))
+                    'Font "05 " + UCASE$(SEN(5))
                     DRAW "B M1,136"
-                    Font "06 " + UCASE$(SEN(6))
+                    'Font "06 " + UCASE$(SEN(6))
                     DRAW "B M1,146"
-                    Font "07 " + UCASE$(SEN(7))
+                    'Font "07 " + UCASE$(SEN(7))
                     DRAW "B M1,156"
-                    Font "08 " + UCASE$(SEN(8))
+                    'Font "08 " + UCASE$(SEN(8))
                     DRAW "B M1,166"
-                    Font "09 " + UCASE$(SEN(9))
+                    'Font "09 " + UCASE$(SEN(9))
                     DRAW "B M1,176"
-                    Font "10 " + UCASE$(SEN(10))
+                    'Font "10 " + UCASE$(SEN(10))
                     DRAW "B M18,188"
                     Font "UP AND DOWN MOVES, ENTER PLAYS, ESC BACKS OUT"
                     Quadrant = 4
