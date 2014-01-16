@@ -1280,6 +1280,7 @@ DO
 							MnS(o, 3) = 24 + (q * 8)
 							MnS(o, 2) = MnS(o, 3) - (_HEIGHT(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
 						END IF
+						IF MnS(o, 0) > MnS(o, 4) THEN MnS(o, 0) = MnS(o, 4): MnS(o, 1) = MnS(o, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
 						IF TrigPos(o, 1) = "R" THEN _PUTIMAGE (MnS(o, 0), MnS(o, 2) - 1), MonsterAnim(VAL(TrigPos(o, 0)), 0, 0) ELSE _PUTIMAGE (MnS(o, 1), MnS(o, 2) - 1)-(MnS(o, 0), MnS(o, 3) - 1), MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)
 						DRAW "C" + STR$(&HFFFFFFFF) + " BM" + STR$(MnS(o, 1) + 6) + "," + STR$(MnS(o, 2)): Font "L" + LTRIM$(STR$(MnS(o, 0))) + " R" + LTRIM$(STR$(MnS(o, 1))) + " T" + LTRIM$(STR$(MnS(o, 2))) + " B" + LTRIM$(STR$(MnS(o, 3))) + " X" + LTRIM$(STR$(MnS(o, 4)))
 					END IF
@@ -1366,10 +1367,12 @@ DO
         LOOP
     ELSEIF LevelStart = 2 THEN
         cur& = _COPYIMAGE(0) 'Take a picture of the new playfield area.
-        FOR za = 255 TO 0 STEP -1
-            _PUTIMAGE (0, 0), cur&
-            _SETALPHA za, 0 TO _RGBA(255, 255, 255, 255), pic&
-            _PUTIMAGE (lft, top)-(rgt, bot), pic&
+        FOR za = 0 TO 160
+            '_PUTIMAGE (0, 0), cur&
+            '_SETALPHA za, 0 TO _RGBA(255, 255, 255, 255), pic&
+            '_PUTIMAGE (lft, top)-(rgt, bot), pic&
+			LINE (0, 0)-(319, 239), _RGB32(0, 0, 0), BF
+			_PUTIMAGE (lft - za, top)-(rgt + za, bot), cur&
             _DISPLAY
         NEXT za
         LevelStart = 0
@@ -1421,9 +1424,9 @@ DO
     END IF
 
 	'STEP 5: Act out the next step in each monster's AI routine (this is a work-in-progress)
-	fs = fs + 1
+	fs = fs + 1: qp = 0: pq = 0
 	IF fs = 5 THEN 'Bugfix: all other enemies keep moving, even after one has stopped, for whatever reason
-		FOR ai = 0 TO (atm - 1)
+		FOR ai = 0 TO (atm - 1) 'Weird bug: stay on one platform for up to a minute, monsters will blink in and out
 			IF slidecount% = 0 AND MnS(ai, 5) = 1 THEN
 				'IF MnS(ai, 0) > 0 THEN '<-- See if moving where this is checked breaks anything.
 				IF TrigPos(ai, 1) = "L" THEN
@@ -1810,69 +1813,95 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveUp) AND slidecount% = 0 THEN
         END IF
     NEXT dc
     IF Ldoor > 0 AND Rdoor > 0 THEN 'If you're actually standing on a door
-        FOR hc = 0 TO (grab& / (27 * scrcnt%)) 'Start looking for the door
-            FOR vc = 0 TO ((27 * scrcnt%) - 1) 'that this door leads to.
-                IF vc <> Vpos AND hc <> Ldoor THEN 'Skip the same door.
-                    'BUG: The check below this sometimes goes out of range, on smaller levels.
-                    IF LevelData(vc, hc) = LevelData(Vpos, Ldoor) AND LevelData(vc, hc + 1) = LevelData(Vpos, Rdoor) THEN
-                        'LOCATE 10, 1: PRINT "YOU ARE HERE: " + STR$(Vpos) + "," + STR$(Ldoor)
-                        'LOCATE 11, 1: PRINT "DOOR GOES HERE: " + STR$(vc) + "," + STR$(hc): _DISPLAY
-                        mc = VAL(RIGHT$(STR$(LevelData(Vpos, Ldoor)), 1))
-                        'TIMER OFF
-                        lft = 0
-                        top = 0
-                        rgt = 319
-                        bot = 239
-                        mv = 11
-                        IF pic& THEN _FREEIMAGE pic&
-                        pic& = _COPYIMAGE(0)
-                        DO
-                            _PUTIMAGE (lft, top)-(rgt, bot), pic&
-                            _DISPLAY
-                            IF actbgm% >= 0 AND mc <> actbgm% THEN
-                                IF lft MOD 50 = 0 THEN mv = mv - 1
-                                _SNDVOL bgm&, (mv / 10)
-                                IF mv = 0 THEN _SNDSTOP bgm&
-                            END IF
-                            IF lft = -500 THEN EXIT DO
-                            lft = lft - 1
-                            top = top - 1
-                            rgt = rgt + 1
-                            bot = bot + 1
-                        LOOP
-                        vr = vc MOD 27 'Set the screen level appropriately
-                        IF vr > 0 THEN vert% = (vc - vr) ELSE vert% = vc
-                        'Reset Cricket's coordinates for the new area
-                        CKT% = (vr * 8) - 8: CKB% = CKT% + (_HEIGHT(plyr&) - 1)
-                        CKX% = hc * 8 'Set Cricket's global X coordinate
-                        IF CKX% >= 148 THEN CKL% = 148 ELSE CKL% = CKX%
-                        CKR% = CKL% + _WIDTH(plyr&) - 1 'And L/R coords
-                        FOR s = 0 TO 41: sprpos(s) = ((s - 1) * 8): NEXT s
-                        FOR lh = (hc - 20) TO hc 'Shift the background to
-                            sprnum(c) = lh '      the correct position
-                            c = c + 1
-                        NEXT lh
-                        FOR rh = (hc + 1) TO (hc + 21) 'Same as above
-                            sprnum(c) = rh
-                            c = c + 1
-                        NEXT rh
-                        c = 0
-                        DO WHILE _KEYDOWN(MoveUp): LOOP 'Let go of the key!
-                        LevelStart = 2
-                        IF actbgm% >= 0 AND mc <> actbgm% THEN
-                            _SNDCLOSE bgm&
-                            bgm& = _SNDOPEN(BGM(mc), "VOL,PAUSE")
-                            _SNDLOOP bgm&
-                            actbgm% = mc
-                        ELSEIF actbgm% = -1 THEN prevbgm% = mc
-                        END IF
-                        IF plyr& <> CrickMov(0) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
-                        EXIT FOR
-                    END IF
+		FOR vd = 0 TO ((27 * scrcnt%) - 1) 'Bugfix: is the door in the same spot as this one, but on a higher level?
+			IF vd <> Vpos THEN 'Let's not come out of the same door we went into; that'd be silly.
+				IF LevelData(vd, Ldoor) = LevelData(Vpos, Ldoor) AND LevelData(vd, Ldoor + 1) = LevelData(Vpos, Rdoor) THEN
+					ovp = vd: ohp = Ldoor: odp = 2
+				END IF
+			END IF
+		NEXT vd
+		FOR hc = 0 TO (grab& / (27 * scrcnt%)) 'Or is the door in a completely different spot?
+			FOR vc = 0 TO ((27 * scrcnt%) - 1) 'We'll start looking all over for it, if it is.
+				IF vc <> Vpos AND hc <> Ldoor THEN 'Skip over the door we just went into.
+					'BUG: The check below this sometimes goes out of range, on smaller levels. (can we replicate it?)
+					IF LevelData(vc, hc) = LevelData(Vpos, Ldoor) AND LevelData(vc, hc + 1) = LevelData(Vpos, Rdoor) THEN
+						ovp = vc: ohp = hc: odp = 1
+					END IF
+				END IF
+			NEXT vc
+		NEXT hc
+		IF odp THEN 'We looked and looked, and actually found the other door. So, let's go into it!
+            'LOCATE 10, 1: PRINT "YOU ARE HERE: " + STR$(Vpos) + "," + STR$(Ldoor)
+            'LOCATE 11, 1: PRINT "DOOR GOES HERE: " + STR$(vc) + "," + STR$(hc): _DISPLAY
+            mc = VAL(RIGHT$(STR$(LevelData(Vpos, Ldoor)), 1))
+            lft = 0
+            top = 0
+            rgt = 319
+            bot = 239
+            mv = 11
+            IF pic& THEN _FREEIMAGE pic&
+            pic& = _COPYIMAGE(0)
+            DO
+                _PUTIMAGE (lft, top)-(rgt, bot), pic&
+                _DISPLAY
+                IF actbgm% >= 0 AND mc <> actbgm% THEN
+                    IF lft MOD 50 = 0 THEN mv = mv - 1
+                    _SNDVOL bgm&, (mv / 10)
+                    IF mv = 0 THEN _SNDSTOP bgm&
                 END IF
-            NEXT vc
-            IF LevelStart THEN EXIT FOR
-        NEXT hc
+                IF lft = 160 THEN EXIT DO
+                lft = lft - 1
+                'top = top - 1
+                rgt = rgt - 1
+                'bot = bot + 1
+            LOOP 'COPY ANY CHANGES YOU MAKE TO THE GAMEPAD "ENTER DOOR" ROUTINE, WHEN YOU'VE CONFIRMED THEY WORK!
+            vr = ovp MOD 27 'Set the screen level appropriately
+            IF vr > 0 THEN vert% = (ovp - vr) ELSE vert% = ovp
+            'Reset Cricket's coordinates for the new area
+            CKT% = (vr * 8) - 8: CKB% = CKT% + (_HEIGHT(plyr&) - 1)
+			sll = 0 'Look for any columns full of STOPSCROLL (99) tiles to the LEFT
+			FOR st = (ohp - 20) TO ohp
+				FOR jj = 0 TO 26
+					IF LevelData(vert% + jj, st) = 99 THEN cfs = cfs + 1
+				NEXT jj
+				IF cfs = 27 THEN sa = sll 'We found one! Make a note of its offset
+				cfs = 0: sll = sll + 1
+			NEXT st
+			ohp = ohp + sa 'Slide the screen to the right however many rows to lock the left side
+			sa = 0: slr = 21 'Now, look for any columns full of STOPSCROLL (99) tiles to the RIGHT
+			FOR st = (ohp + 1) TO (ohp + 21)
+				FOR jj = 0 TO 26
+					IF LevelData(vert% + jj, st) = 99 THEN cfs = cfs + 1
+				NEXT jj
+				IF cfs = 27 THEN sa = slr 'We found one! Make a note of its offset
+				cfs = 0: slr = slr - 1
+			NEXT st
+			ohp = ohp - sa 'Slide the screen to the left however many rows to lock the right side
+			CKX% = ohp * 8 'Set Cricket's global X coordinate
+            IF CKX% >= 148 THEN CKL% = 148 ELSE CKL% = CKX% 'Should change if one or both sides are locked
+			'IF sa AND CKX% >= 148 THEN CKL% = CKL% - (sa * 8): CKX% = CKX% - (sa * 8) 'Either plus or minus sa * 8
+            CKR% = CKL% + _WIDTH(plyr&) - 1 'And L/R coords
+            FOR s = 0 TO 41: sprpos(s) = ((s - 1) * 8): NEXT s
+            FOR lh = (ohp - 20) TO ohp 'Shift the background to
+                sprnum(c) = lh '      the correct position
+                c = c + 1
+            NEXT lh
+            FOR rh = (ohp + 1) TO (ohp + 21) 'Same as above
+                sprnum(c) = rh
+                c = c + 1
+            NEXT rh
+            c = 0
+            DO WHILE _KEYDOWN(MoveUp): LOOP 'Let go of the key!
+            LevelStart = 2
+            IF actbgm% >= 0 AND mc <> actbgm% THEN
+                _SNDCLOSE bgm&
+                bgm& = _SNDOPEN(BGM(mc), "VOL,PAUSE")
+                _SNDLOOP bgm&
+                actbgm% = mc
+            ELSEIF actbgm% = -1 THEN prevbgm% = mc
+            END IF
+            IF plyr& <> CrickMov(0) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
+        END IF
     END IF
     IF _KEYDOWN(MoveJump) AND jump% > -2 AND jdrop = 0 AND jpush = 0 THEN
         'IF jump% = -2 THEN jump% = 0 'Jump off from a ladder/beanstalk.
@@ -2624,7 +2653,8 @@ IF noblock > 3 AND CKX% > 0 THEN 'If nothing's in our way, let's move!
 			IF MnS(n, 5) = 1 THEN
 				MnS(n, 0) = MnS(n, 0) + 1
 				MnS(n, 1) = MnS(n, 1) + 1
-				IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
+				'IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(n, 4) = MnS(n, 4) + 1
+				'IF MnS(n, 0) >= 320 THEN MnS(n, 5) = 0
 			END IF
 		NEXT n
         'ELSEIF CKL% < 148 THEN
@@ -2681,7 +2711,8 @@ IF noblock > 3 THEN 'If nothing's in our way, where do we move?
 			IF MnS(n, 5) = 1 THEN
 				MnS(n, 0) = MnS(n, 0) - 1
 				MnS(n, 1) = MnS(n, 1) - 1
-				IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
+				'IF MnS(n, 0) = MnS(n, 4) OR MnS(n, 4) < 148 THEN MnS(N, 4) = MnS(n, 4) - 1
+				'IF MnS(n, 1) <= 0 THEN MnS(n, 5) = 0
 			END IF
 		NEXT n
     ELSEIF CKL% < 148 OR str = 27 AND CKR% < 319 THEN
@@ -2721,70 +2752,95 @@ FOR dc = 0 TO sn 'Check to see if we're standing in front of a door
     END IF
 NEXT dc
 IF Ldoor > 0 AND Rdoor > 0 THEN 'If you're actually standing on a door
-    FOR hc = 0 TO (grab& / (27 * scrcnt%)) 'Start looking for the door
-        FOR vc = 0 TO ((27 * scrcnt%) - 1) 'that this door leads to.
-            IF vc <> Vpos AND hc <> Ldoor THEN 'Skip the same door.
-                'BUG: The check below this sometimes goes out of range, on smaller levels.
-                IF LevelData(vc, hc) = LevelData(Vpos, Ldoor) AND LevelData(vc, hc + 1) = LevelData(Vpos, Rdoor) THEN
-                    'LOCATE 10, 1: PRINT "YOU ARE HERE: " + STR$(Vpos) + "," + STR$(Ldoor)
-                    'LOCATE 11, 1: PRINT "DOOR GOES HERE: " + STR$(vc) + "," + STR$(hc): _DISPLAY
-                    mc = VAL(RIGHT$(STR$(LevelData(Vpos, Ldoor)), 1))
-                    'TIMER OFF
-                    lft = 0
-                    top = 0
-                    rgt = 319
-                    bot = 239
-                    mv = 11
-                    IF pic& THEN _FREEIMAGE pic&
-                    pic& = _COPYIMAGE(0)
-                    DO
-                        _PUTIMAGE (lft, top)-(rgt, bot), pic&
-                        _DISPLAY
-                        IF actbgm% >= 0 AND mc <> actbgm% THEN
-                            IF lft MOD 50 = 0 THEN mv = mv - 1
-                            _SNDVOL bgm&, (mv / 10)
-                            IF mv = 0 THEN _SNDSTOP bgm&
-                        END IF
-                        IF lft = -500 THEN EXIT DO
-                        lft = lft - 1
-                        top = top - 1
-                        rgt = rgt + 1
-                        bot = bot + 1
-                    LOOP
-                    vr = vc MOD 27 'Set the screen level appropriately
-                    IF vr > 0 THEN vert% = (vc - vr) ELSE vert% = vc
-                    'Reset Cricket's coordinates for the new area
-                    CKT% = (vr * 8) - 8: CKB% = CKT% + (_HEIGHT(plyr&) - 1)
-                    CKX% = hc * 8 'Set Cricket's global X coordinate
-                    IF CKX% >= 148 THEN CKL% = 148 ELSE CKL% = CKX%
-                    CKR% = CKL% + _WIDTH(plyr&) - 1 'And L/R coords
-                    FOR s = 0 TO 41: sprpos(s) = ((s - 1) * 8): NEXT s
-                    FOR lh = (hc - 20) TO hc 'Shift the background to
-                        sprnum(c) = lh '      the correct position
-                        c = c + 1
-                    NEXT lh
-                    FOR rh = (hc + 1) TO (hc + 21) 'Same as above
-                        sprnum(c) = rh
-                        c = c + 1
-                    NEXT rh
-                    c = 0
-                    DO WHILE _KEYDOWN(MoveUp): LOOP 'Let go of the key!
-                    'IF tick > 0 THEN ON TIMER(1) GOSUB ClockChange: TIMER ON
-                    LevelStart = 2
-                    IF actbgm% >= 0 AND mc <> actbgm% THEN
-                        _SNDCLOSE bgm&
-                        bgm& = _SNDOPEN(BGM(mc), "VOL,PAUSE")
-                        _SNDLOOP bgm&
-                        actbgm% = mc
-                    ELSEIF actbgm% = -1 THEN prevbgm% = mc
-                    END IF
-                    IF plyr& <> CrickMov(0) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
-                    EXIT FOR
-                END IF
+	FOR vd = 0 TO ((27 * scrcnt%) - 1) 'Bugfix: is the door in the same spot as this one, but on a higher level?
+		IF vd <> Vpos THEN 'Let's not come out of the same door we went into; that'd be silly.
+			IF LevelData(vd, Ldoor) = LevelData(Vpos, Ldoor) AND LevelData(vd, Ldoor + 1) = LevelData(Vpos, Rdoor) THEN
+				ovp = vd: ohp = Ldoor: odp = 2
+			END IF
+		END IF
+	NEXT vd
+	FOR hc = 0 TO (grab& / (27 * scrcnt%)) 'Or is the door in a completely different spot?
+		FOR vc = 0 TO ((27 * scrcnt%) - 1) 'We'll start looking all over for it, if it is.
+			IF vc <> Vpos AND hc <> Ldoor THEN 'Skip over the door we just went into.
+				'BUG: The check below this sometimes goes out of range, on smaller levels. (can we replicate it?)
+				IF LevelData(vc, hc) = LevelData(Vpos, Ldoor) AND LevelData(vc, hc + 1) = LevelData(Vpos, Rdoor) THEN
+					ovp = vc: ohp = hc: odp = 1
+				END IF
+			END IF
+		NEXT vc
+	NEXT hc
+	IF odp THEN 'We looked and looked, and actually found the other door. So, let's go into it!
+        'LOCATE 10, 1: PRINT "YOU ARE HERE: " + STR$(Vpos) + "," + STR$(Ldoor)
+        'LOCATE 11, 1: PRINT "DOOR GOES HERE: " + STR$(vc) + "," + STR$(hc): _DISPLAY
+        mc = VAL(RIGHT$(STR$(LevelData(Vpos, Ldoor)), 1))
+        lft = 0
+        top = 0
+        rgt = 319
+        bot = 239
+        mv = 11
+        IF pic& THEN _FREEIMAGE pic&
+        pic& = _COPYIMAGE(0)
+        DO
+            _PUTIMAGE (lft, top)-(rgt, bot), pic&
+            _DISPLAY
+            IF actbgm% >= 0 AND mc <> actbgm% THEN
+                IF lft MOD 50 = 0 THEN mv = mv - 1
+                _SNDVOL bgm&, (mv / 10)
+                IF mv = 0 THEN _SNDSTOP bgm&
             END IF
-        NEXT vc
-        IF LevelStart THEN EXIT FOR
-    NEXT hc
+            IF lft = 160 THEN EXIT DO
+            lft = lft - 1
+            'top = top - 1
+            rgt = rgt - 1
+            'bot = bot + 1
+        LOOP 'MAKE SURE YOU RECIPROCATE ANY CHANGES TO THE KEYBOARD VERSION OF THIS ROUTINE DOWN HERE, TOO!
+        vr = ovp MOD 27 'Set the screen level appropriately
+        IF vr > 0 THEN vert% = (ovp - vr) ELSE vert% = ovp
+        'Reset Cricket's coordinates for the new area
+        CKT% = (vr * 8) - 8: CKB% = CKT% + (_HEIGHT(plyr&) - 1)
+		sll = 0 'Look for any columns full of STOPSCROLL (99) tiles to the LEFT
+		FOR st = (ohp - 20) TO ohp
+			FOR jj = 0 TO 26
+				IF LevelData(vert% + jj, st) = 99 THEN cfs = cfs + 1
+			NEXT jj
+			IF cfs = 27 THEN sa = sll 'We found one! Make a note of its offset
+			cfs = 0: sll = sll + 1
+		NEXT st
+		ohp = ohp + sa 'Slide the screen to the right however many rows to lock the left side
+		sa = 0: slr = 21 'Now, look for any columns full of STOPSCROLL (99) tiles to the RIGHT
+		FOR st = (ohp + 1) TO (ohp + 21)
+			FOR jj = 0 TO 26
+				IF LevelData(vert% + jj, st) = 99 THEN cfs = cfs + 1
+			NEXT jj
+			IF cfs = 27 THEN sa = slr 'We found one! Make a note of its offset
+			cfs = 0: slr = slr - 1
+		NEXT st
+		ohp = ohp - sa 'Slide the screen to the left however many rows to lock the right side
+		CKX% = ohp * 8 'Set Cricket's global X coordinate
+        IF CKX% >= 148 THEN CKL% = 148 ELSE CKL% = CKX% 'Should change if one or both sides are locked
+		'IF sa AND CKX% >= 148 THEN CKL% = CKL% - (sa * 8): CKX% = CKX% - (sa * 8) 'Either plus or minus sa * 8
+        CKR% = CKL% + _WIDTH(plyr&) - 1 'And L/R coords
+        FOR s = 0 TO 41: sprpos(s) = ((s - 1) * 8): NEXT s
+        FOR lh = (ohp - 20) TO ohp 'Shift the background to
+            sprnum(c) = lh '      the correct position
+            c = c + 1
+        NEXT lh
+        FOR rh = (ohp + 1) TO (ohp + 21) 'Same as above
+            sprnum(c) = rh
+            c = c + 1
+        NEXT rh
+        c = 0
+        DO WHILE _KEYDOWN(MoveUp): LOOP 'Let go of the key! <-- CHANGE THIS TO THE GAMEPAD EQUIVALENT!
+        LevelStart = 2
+        IF actbgm% >= 0 AND mc <> actbgm% THEN
+            _SNDCLOSE bgm&
+            bgm& = _SNDOPEN(BGM(mc), "VOL,PAUSE")
+            _SNDLOOP bgm&
+            actbgm% = mc
+        ELSEIF actbgm% = -1 THEN prevbgm% = mc
+        END IF
+        IF plyr& <> CrickMov(0) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
+    END IF
 END IF
 RETURN
 
@@ -2812,9 +2868,9 @@ IF jump% = 19 THEN plyr& = CrickJmp(3): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL
 IF jump% = 30 THEN plyr& = CrickJmp(4): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1
 IF rj = 1 AND jump% < 60 THEN
     notop = 0
-    IF CKT% <= 10 THEN 'BUG: Jumping off the screen at the topmost screen level still crashes the game.
+    IF CKT% <= 23 THEN 'Does jumping off the screen at the topmost screen level still crash the game?
         CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-    ELSEIF CKT% > 10 THEN
+    ELSEIF CKT% > 23 THEN
         FOR Head = 0 TO sn
             IF LevelData(vert% + (PRow - 5), AboveHead(Head)) = 2 THEN
                 jdrop = 1 'Stop jumping if something's above his head
@@ -2827,9 +2883,9 @@ IF rj = 1 AND jump% < 60 THEN
     END IF
 ELSEIF rj = 0 AND jump% < 42 THEN 'Height test, instead of setting the coordinate.
     notop = 0
-    IF CKT% <= 16 THEN 'Bugfix. If nothing's above him, he just jumps.
+    IF CKT% <= 23 THEN 'Bugfix. If nothing's above him, he just jumps.
         CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-    ELSEIF CKT% > 16 THEN
+    ELSEIF CKT% > 23 THEN
         FOR Head = 0 TO sn
             IF LevelData(vert% + (PRow - 5), AboveHead(Head)) = 2 THEN
                 jdrop = 1 'Stop jumping if something's above his head
@@ -2857,11 +2913,9 @@ RETURN
 '*********************************************************
 ClockChange: ' Change the time on the clock subroutine (once every second)
 'A little change to the main routine, since I'm trying something different.
-'TIMER OFF
 tick = tick - 1
 IF tick = 59 THEN _SNDPLAY SEF(15)
 IF tick = 0 THEN _SNDPLAY SEF(16)
-'IF tick > 0 THEN ON TIMER(1) GOSUB ClockChange: TIMER ON
 RETURN
 
 '*********************************************************
