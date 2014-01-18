@@ -988,7 +988,7 @@ FOR sl% = 0 TO (scrcnt% - 1)
 
 NEXT sl%
 
-CLOSE 1, 2, 3, 4, 5
+CLOSE 1, 2, 3, 4, 5, 6, 7
 
 'Pre drawing routine loop routines -- setting up variables and arrays
 IF res = 0 THEN
@@ -1842,15 +1842,16 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveUp) AND slidecount% = 0 THEN
             IF pic& THEN _FREEIMAGE pic&
             pic& = _COPYIMAGE(0)
             DO
+				LINE (0, 0)-(319, 239), _RGB32(0, 0, 0), BF
                 _PUTIMAGE (lft, top)-(rgt, bot), pic&
                 _DISPLAY
                 IF actbgm% >= 0 AND mc <> actbgm% THEN
-                    IF lft MOD 50 = 0 THEN mv = mv - 1
+                    IF lft MOD 20 = 0 THEN mv = mv - 1
                     _SNDVOL bgm&, (mv / 10)
                     IF mv = 0 THEN _SNDSTOP bgm&
                 END IF
                 IF lft = 160 THEN EXIT DO
-                lft = lft - 1
+                lft = lft + 1
                 'top = top - 1
                 rgt = rgt - 1
                 'bot = bot + 1
@@ -2781,15 +2782,16 @@ IF Ldoor > 0 AND Rdoor > 0 THEN 'If you're actually standing on a door
         IF pic& THEN _FREEIMAGE pic&
         pic& = _COPYIMAGE(0)
         DO
+			LINE (0, 0)-(319, 239), _RGB32(0, 0, 0), BF
             _PUTIMAGE (lft, top)-(rgt, bot), pic&
             _DISPLAY
             IF actbgm% >= 0 AND mc <> actbgm% THEN
-                IF lft MOD 50 = 0 THEN mv = mv - 1
+                IF lft MOD 20 = 0 THEN mv = mv - 1
                 _SNDVOL bgm&, (mv / 10)
                 IF mv = 0 THEN _SNDSTOP bgm&
             END IF
             IF lft = 160 THEN EXIT DO
-            lft = lft - 1
+            lft = lft + 1
             'top = top - 1
             rgt = rgt - 1
             'bot = bot + 1
@@ -3732,7 +3734,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     'BGM(2) = respath$ + bgmfldr$ + "Birdo.mp3"
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
                     EXIT DO
-                CASE 6 'Start > Phringdott 3 (I'm planning a new map, that'll either be here, or Phringdott 4)
+                CASE 6 'Start > Phringdott 3 (I have an idea for a level, that will either be here, or Phringdott 4)
                     _SNDPLAY SEF(4)
                     zone$ = "PHRINGDOTT 3"
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
@@ -3748,7 +3750,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     OPEN Foreground2$ FOR INPUT AS #2
                     OPEN Background1$ FOR INPUT AS #3
                     OPEN Background2$ FOR INPUT AS #4
-                    'Quick check, to see how many songs should be loaded
+					OPEN ActionDef$ FOR INPUT AS #6
+					OPEN ActionTable$ FOR INPUT AS #7
+                    'First quick check: see how many songs should be loaded
                     FOR x = 0 TO 5 'Skip over the first six settings
                         INPUT #5, stuff$
                     NEXT x
@@ -3758,7 +3762,21 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         IF LEN(song$) > 3 THEN msn = msn + 1 ELSE EXIT DO
                     LOOP
                     'TODO: Throw an error if more than 10 songs are found.
+					adm = 0: atm = 0
+					'Second quick check: how many monsters are in the action def file? (WIP)
+					DO UNTIL EOF(6) 'WIP: Grab three variables each, for right now.
+						INPUT #6, a$, b$, c$
+						adm = adm + 1 'Set the maximum number
+					LOOP
+					'Third quick check: how many entries are in the action table? (WIP)
+					DO UNTIL EOF(7) 'WIP: Grab four variables each, for right now.
+						INPUT #7, j$, k$, l$, m$
+						atm = atm + 1 'Set the maximum number
+					LOOP
+					'Close and re-open level data, action def and action table, to start from the beginning
                     CLOSE #5: OPEN LevelData$ FOR INPUT AS #5
+					CLOSE #6: OPEN ActionDef$ FOR INPUT AS #6
+					CLOSE #7: OPEN ActionTable$ FOR INPUT AS #7
                     'Now we read the level data, for real!
                     INPUT #5, lvname$ 'The name of the level
                     INPUT #5, clock$ 'How high to set the clock
@@ -3774,8 +3792,8 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     CKT% = VAL(starty$) 'Set Cricket's starting Y coordinate
                     IF actbgm% >= 0 AND bgm& THEN _SNDCLOSE bgm&
                     FOR sf = 0 TO (msn - 1) 'Get each song filename.
-                        INPUT #5, sf$ 'This way, the file is positioned at
-                        BGM(sf) = sf$ 'the level data, where we need it.
+                        INPUT #5, sf$ 'This way, the file is positioned at the level data, where we need it.
+                        BGM(sf) = respath$ + bgmfldr$ + sf$ 'Should all music be loaded from the MUSIC folder?
                     NEXT sf
                     'BGM(0) = "/media/PHANTOM/IMPULSE/SOTRFALT.IT"
                     'BGM(1) = respath$ + bgmfldr$ + "SubUnderworld.mp3"
