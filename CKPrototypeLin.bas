@@ -1280,14 +1280,19 @@ DO
                             MnS(o, 3) = 24 + (q * 8)
                             MnS(o, 2) = MnS(o, 3) - (_HEIGHT(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
                         END IF
-                        IF MnS(o, 0) > MnS(o, 4) THEN MnS(o, 0) = MnS(o, 4): MnS(o, 1) = MnS(o, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
-                        IF TrigPos(o, 1) = "R" THEN _PUTIMAGE (MnS(o, 0), MnS(o, 2) - 1), MonsterAnim(VAL(TrigPos(o, 0)), 0, 0) ELSE _PUTIMAGE (MnS(o, 1), MnS(o, 2) - 1)-(MnS(o, 0), MnS(o, 3) - 1), MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)
-                        DRAW "C" + STR$(&HFFFFFFFF) + " BM" + STR$(MnS(o, 1) + 6) + "," + STR$(MnS(o, 2)): Font "L" + LTRIM$(STR$(MnS(o, 0))) + " R" + LTRIM$(STR$(MnS(o, 1))) + " T" + LTRIM$(STR$(MnS(o, 2))) + " B" + LTRIM$(STR$(MnS(o, 3))) + " X" + LTRIM$(STR$(MnS(o, 4)))
                     END IF
                 NEXT p
             END IF
         NEXT o
     NEXT q
+
+    FOR r = 0 TO (atm - 1) 'Place any monsters that were just spawned, or are already active, on the screen
+        IF MnS(r, 5) = 1 THEN 'Bugfix: the "invisible, slow, leftward-sweeping, monster engulfing curtain" is history.
+            IF MnS(r, 0) > MnS(r, 4) THEN MnS(r, 0) = MnS(r, 4): MnS(r, 1) = MnS(r, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)) - 1)
+            IF TrigPos(r, 1) = "R" THEN _PUTIMAGE (MnS(r, 0), MnS(r, 2) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0) ELSE _PUTIMAGE (MnS(r, 1), MnS(r, 2) - 1)-(MnS(r, 0), MnS(r, 3) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)
+            IF dh THEN DRAW "C" + STR$(&HFFFFFFFF) + " BM" + STR$(MnS(r, 1) + 6) + "," + STR$(MnS(r, 2)): Font "L" + LTRIM$(STR$(MnS(r, 0))) + " R" + LTRIM$(STR$(MnS(r, 1))) + " T" + LTRIM$(STR$(MnS(r, 2))) + " B" + LTRIM$(STR$(MnS(r, 3))) + " X" + LTRIM$(STR$(MnS(r, 4)))
+        END IF
+    NEXT r
 
     '** CRICKET KAMODON
     IF pf THEN 'I WAS using Knuckles the Echidna to test this, but my brother suggested someone different...
