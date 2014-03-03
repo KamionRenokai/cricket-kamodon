@@ -1268,6 +1268,9 @@ DO
     END IF
 
     'Sprite positioning routine -- draw the player, and each enemy in sight
+    'NOTE: There is a bug, where monsters will sometimes not respawn, after being on-screen for at least one minute.
+    'Please do NOT forget to fix this bug, somehow! Don't just leave it in, and block it off, or something else.
+
     '** MONSTERS/BOSSES/ACTION TRIGGERS (BUG: Enemies on leftmost column disappear when player's "back is turned")
     FOR q = 0 TO 27 'What screen row are we on? Are there monsters on that screen row, too?
         FOR o = 0 TO (atm - 1) 'Run through each monster in memory, and check its coordinates
@@ -1401,7 +1404,7 @@ DO
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 2) = MnS(n, 2) + 1
                 MnS(n, 3) = MnS(n, 3) + 1
-                IF MnS(n, 2) >= 240 THEN MnS(n, 5) = 0
+                'IF MnS(n, 2) >= 240 THEN MnS(n, 5) = 0
             END IF
         NEXT n
         IF verrow(0) >= 0 THEN
@@ -1420,7 +1423,7 @@ DO
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 2) = MnS(n, 2) - 1
                 MnS(n, 3) = MnS(n, 3) - 1
-                IF MnS(n, 3) <= 23 THEN MnS(n, 5) = 0
+                'IF MnS(n, 3) <= 23 THEN MnS(n, 5) = 0
             END IF
         NEXT n
         IF verrow(0) <= -16 THEN
@@ -4286,25 +4289,25 @@ DRAW "C" + STR$(&HFF009900)
 CenterFont "THIS PROVES I'M NOT TRISKAIDEKAPHOBIC, BECAUSE", 90
 'DRAW "B M18,100"
 CenterFont "UNLIKE MILTON BRADLEY, I'M NOT SUPERSTITIOUS!", 100
-DRAW "B M4,110"
+'DRAW "B M4,110"
 'Font "TO SEE IS WHAT I WOULD CALL MY ": DRAW "C" + STR$(&HFF00FF00): Font "DANGEROUS DAVE IN"
-DRAW "B M21,120"
+'DRAW "B M21,120"
 'Font "COPYRIGHT INFRINGEMENT": DRAW "C" + STR$(&HFF009900): Font ", IN A SENSE. THE ONLY"
-DRAW "B M30,130"
+'DRAW "B M30,130"
 'Font "DIFFERENCES WOULD BE CRICKET IN PLACE OF"
-DRAW "B M8,140"
+'DRAW "B M8,140"
 'Font "DANGEROUS DAVE, AND A CLONE OF WORLD 1, LEVELS 1"
-DRAW "B M13,150"
+'DRAW "B M13,150"
 'Font "THROUGH 3 FROM SUPER MARIO BROS. 2, INSTEAD OF"
-DRAW "B M7,160"
+'DRAW "B M7,160"
 'Font "WORLD 1, LEVEL 1 FROM SUPER MARIO BROS. 3. I ALSO"
-DRAW "B M2,170"
+'DRAW "B M2,170"
 'Font "WANT TO POINT OUT THAT THE NEXT DEMO, AND THE FULL"
-DRAW "B M21,180"
+'DRAW "B M21,180"
 'Font "GAME, WHEN I FINALLY FINISH IT, MIGHT HAVE AT"
-DRAW "B M5,190"
+'DRAW "B M5,190"
 'Font "LEAST THE FIRST LEVEL FROM THIS DEMO, BUT IT WILL"
-DRAW "B M18,200"
+'DRAW "B M18,200"
 'Font "DEFINITELY HAVE A WHOLE BUNCH OF NEW LEVELS."
 
 DO
