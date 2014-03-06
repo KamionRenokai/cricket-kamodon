@@ -3723,15 +3723,12 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         INPUT #5, sf$ 'This way, the file is positioned at
                         BGM(sf) = sf$ 'the level data, where we need it.
                     NEXT sf 'TODO: Add "respath$ + bgmfldr$ + " to the front of each entry.
-                    'BGM(0) = "/media/PHANTOM/IMPULSE/SOTRFALT.IT"
-                    'BGM(1) = respath$ + bgmfldr$ + "SubUnderworld.mp3"
-                    'BGM(2) = respath$ + bgmfldr$ + "Birdo.mp3"
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
                     EXIT DO
-                CASE 5 'Start > Subcon 2 (soon to be replaced with Phringdott 2, when I get to a playable alpha)
+                CASE 5 'Start > Phringdott 2 (another possible level idea; I'll probably keep this one here)
                     _SNDPLAY SEF(4)
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
-                    zone$ = "SUBCON 2"
+                    zone$ = "PHRINGDOTT 2"
                     LevelData$ = respath$ + "WLDXL2LD.KMD"
                     Foreground1$ = respath$ + "WLDXL2F1.KMD"
                     Foreground2$ = respath$ + "WLDXL2F2.KMD"
@@ -3769,12 +3766,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     CKT% = VAL(starty$) 'Set Cricket's starting Y coordinate
                     IF actbgm% >= 0 AND bgm& THEN _SNDCLOSE bgm&
                     FOR sf = 0 TO (msn - 1) 'Get each song filename.
-                        INPUT #5, sf$ 'This way, the file is positioned at
-                        BGM(sf) = sf$ 'the level data, where we need it.
+                        INPUT #5, sf$ 'This way, the file is positioned at the level data, where we need it.
+                        BGM(sf) = respath$ + bgmfldr$ + sf$ 'Should all music be loaded from the MUSIC folder?
                     NEXT sf
-                    'BGM(0) = "/media/PHANTOM/IMPULSE/SOTRFALT.IT"
-                    'BGM(1) = respath$ + bgmfldr$ + "SubUnderworld.mp3"
-                    'BGM(2) = respath$ + bgmfldr$ + "Birdo.mp3"
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
                     EXIT DO
                 CASE 6 'Start > Phringdott 3 (I have an idea for a level, that will either be here, or Phringdott 4)
@@ -3838,9 +3832,6 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         INPUT #5, sf$ 'This way, the file is positioned at the level data, where we need it.
                         BGM(sf) = respath$ + bgmfldr$ + sf$ 'Should all music be loaded from the MUSIC folder?
                     NEXT sf
-                    'BGM(0) = "/media/PHANTOM/IMPULSE/SOTRFALT.IT"
-                    'BGM(1) = respath$ + bgmfldr$ + "SubUnderworld.mp3"
-                    'BGM(2) = respath$ + bgmfldr$ + "Mouser.mp3"
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
                     EXIT DO
                 CASE 7 'Options > Weapon of Choice (select controller)
