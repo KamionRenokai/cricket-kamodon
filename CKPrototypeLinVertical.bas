@@ -694,8 +694,8 @@ ELSE
     IF keep3& < grab3& OR keep3& < hold3& OR keep3& < take3& THEN PRINT "FG2 is smaller than BG1, BG2 and FG1! They should all be the same length!": END
 END IF
 
-'**** Change for alpha 10: map data arrays aren't DIM'd until the level loading routine.
-'**** Change for alpha 12: sprite array is extended to fit sixteen frames for each background/foreground sprite
+'**** Change for build 10: map data arrays aren't DIM'd until the level loading routine.
+'**** Change for build 12: sprite array is extended to fit sixteen frames for each background/foreground sprite
 DIM SHARED spritedata(0 TO 1280, 0 TO tilecnt%) AS LONG 'The sprite array stays here, though!
 
 'Older routine comments were removed; they're in older source files, anyway.
@@ -714,7 +714,7 @@ ON ERROR GOTO 0 ' Kill the error-trapping subroutine (should we keep this?)
 CALL HardwareCheck ' The "tech demo intro message" only. The rest is skipped.
 CALL FlameWareLogo ' FLAMEWARE PRESENTS screen
 
-'** Change for alpha 11: I put a line marker here, as I'm going to put in ESC key and pause menus.
+'** Change for build 11: I put a line marker here, as I'm going to put in ESC key and pause menus. (I did in build 12)
 LoopBack: 'To jump back to the main menu, should the player hit ESC while in-game.
 BGM(0) = respath$ + bgmfldr$ + "TechDemoTheme.mp3"
 'If there's other songs loaded (like, if we come here from exiting the game), unload them
@@ -781,7 +781,7 @@ FadeIn
 'Read the foreground and background maps from a file (hopefully save memory)
 'Moved these here, since the actual game will load level data on this screen.
 
-LOCATE 15, 1: PRINT "DEBUG: Quick check: ";
+LOCATE 15, 1: PRINT "DEBUG: Quick check: "; 'I can probably comment these DEBUG lines out, at some point.
 'Foreground 1 quick sanity check
 grab& = 0
 DO UNTIL EOF(1)
@@ -839,7 +839,7 @@ FOR tc = 0 TO tilecnt%
 NEXT tc
 
 'Now we set up the map data arrays, sized according to the level.
-IF res THEN 'Check: is this the first time, this run, that we've DIM'd these arrays?
+IF res THEN 'Check: is this the first time, this run, that we've DIM'd these arrays? (The following is if it's not)
     REDIM SHARED Background1(0 TO ((27 * scrcnt%) - 1), 0 TO ((hold& / 27) - 1)) AS _UNSIGNED INTEGER
     REDIM SHARED Background2(0 TO ((27 * scrcnt%) - 1), 0 TO ((take& / 27) - 1)) AS _UNSIGNED INTEGER
     REDIM SHARED Foreground1(0 TO ((27 * scrcnt%) - 1), 0 TO ((grab& / 27) - 1)) AS _UNSIGNED INTEGER
@@ -850,7 +850,7 @@ IF res THEN 'Check: is this the first time, this run, that we've DIM'd these arr
     REDIM SHARED MnP(atm - 1) AS INTEGER 'Temporary array for remembering the next command in each monster's AI
     REDIM SHARED ActionType(adm - 1) AS STRING 'Which of the read action types are "ENEMY", "BOSS" or "ACTION"
     REDIM SHARED TrigPos(atm - 1, 0 TO 3) AS STRING 'Since only one value is a string, they all have to be string vars
-ELSE 'If it is, then let's DIM them properly
+ELSE 'But if it is, then let's DIM them properly
     DIM SHARED Background1(0 TO ((27 * scrcnt%) - 1), 0 TO ((hold& / 27) - 1)) AS _UNSIGNED INTEGER
     DIM SHARED Background2(0 TO ((27 * scrcnt%) - 1), 0 TO ((take& / 27) - 1)) AS _UNSIGNED INTEGER
     DIM SHARED Foreground1(0 TO ((27 * scrcnt%) - 1), 0 TO ((grab& / 27) - 1)) AS _UNSIGNED INTEGER
@@ -1051,7 +1051,7 @@ CKR% = CKL% + _WIDTH(plyr&) - 1 '  Coordinate of Cricket's right border
 CKB% = CKT% + _HEIGHT(plyr&) - 1 ' Coordinate of the very bottom of Cricket's feet
 CKX% = CKL% '       Global X coordinate, for absolute positioning on the map
 
-'**** Change for alpha 12: Bye-bye ON TIMER-style "ClockChange", hello tenth-of-a-second-to-the-clock timing
+'**** Change for build 12: Bye-bye ON TIMER-style "ClockChange", hello tenth-of-a-second-to-the-clock timing
 
 IF res = 0 THEN
     DIM UnderFoot(0 TO 3) AS INTEGER
@@ -1254,15 +1254,20 @@ DO
         IF lives > 0 THEN lives = lives - 1 'Take away a life
         'At some point, the game will jump to the "try again?" screen.
         'For now, all you have to do is press F12+R to revive Cricket.
-    ELSEIF CKB% >= 220 AND slidecount% = 0 AND (vert% + 27) / 27 <> scrcnt% THEN 'Originally >= 236
+    ELSEIF CKB% >= 220 AND (vert% + 27) / 27 <> scrcnt% THEN 'Originally >= 236, slidecount% = 0
+        'If Cricket's feet touch a certain line, near the bottom of the screen, the screen will scroll up as he falls.
         ssd = 0 'Reset the counter
         FOR cun = 0 TO (sn - 1) 'Stops the screen from scrolling, if Cricket lands on any of the below platform types
             IF LevelData(vert% + PRow, UnderFoot(cun)) = 1 THEN ssd = ssd + 1
             IF LevelData(vert% + PRow, UnderFoot(cun)) = 2 THEN ssd = ssd + 1
         NEXT cun
-        IF ssd = sn THEN slidecount% = 2: CKT% = CKT% - 2: CKB% = (CKT% + _HEIGHT(plyr&) - 1) ELSE slidecount% = 1: CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
+        IF ssd = sn THEN slidecount% = 3: CKT% = CKT% - 4: CKB% = (CKT% + _HEIGHT(plyr&) - 1) ELSE slidecount% = 1: CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
+        '    'DO SOMETHING, MUTTLEY!!
+        'ELSE
+        'IF jdrop THEN slidecount% = 1: CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
+        'END IF
     ELSEIF CKT% <= 80 AND slidecount% = 0 AND (vert% + 27) / 27 > 1 THEN 'Originally <= 40
-        'And if he hits the top of the screen, let's scroll it down!
+        'And if his head touches a certain line, near the top of the screen, the screen will scroll down as he rises.
         'TODO: Check for CEILING tiles (92) at the top of the screen, before scrolling downward.
         slidecount% = -1
         CKT% = CKT% + 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
@@ -1375,7 +1380,7 @@ DO
         LevelStart = 0 ' Make it so it doesn't keep fading in with each loop.
         DO WHILE _KEYHIT ' And this clears the keyboard buffer.
         LOOP
-    ELSEIF LevelStart = 2 THEN
+    ELSEIF LevelStart = 2 THEN ' This is if we're coming out of a "walk through a door" transition.
         cur& = _COPYIMAGE(0) 'Take a picture of the new playfield area.
         FOR za = 0 TO 160
             '_PUTIMAGE (0, 0), cur&
@@ -1393,15 +1398,14 @@ DO
 
     'STEP 4: Check to see if we have to scroll the screen upward or downward
 
-    'This routine makes the screen scroll (and stops everything else from
-    'moving, player or creature) one row of pixels for each number in the
-    '"slidecount%" integer. Once it hits zero, scrolling stops.
+    'This routine makes the screen scroll one row of pixels for each number in the "slidecount%" integer.
+    'Once it hits zero, scrolling stops.
     IF slidecount% < 0 THEN 'Are we scrolling the screen downward?
-        IF jdrop THEN jdrop = 0: jdset = 1
+        'IF jdrop THEN jdrop = 0: jdset = 1
         FOR v = 0 TO 28: verrow(v) = verrow(v) + 1: NEXT v
         slidecount% = slidecount% + 1
-        CKT% = CKT% + 1
-        CKB% = CKB% + 1
+        'CKT% = CKT% + 1
+        'CKB% = CKB% + 1
         FOR n = 0 TO (atm - 1)
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 2) = MnS(n, 2) + 1
@@ -1413,13 +1417,14 @@ DO
             FOR v = 0 TO 28: verrow(v) = verrow(v) - 8: NEXT v
             vert% = vert% - 1
         END IF
-        IF slidecount% = 0 AND jdset THEN jdrop = 1: jdset = 0
+        IF vert% = 0 THEN slidecount% = 0 'Stop the screen from scrolling if we've hit the top
+        'IF slidecount% = 0 AND jdset THEN jdrop = 1: jdset = 0
     ELSEIF slidecount% > 0 THEN 'Or are we scrolling the screen upward?
-        IF jdrop THEN jdrop = 0: jdset = 1
+        'IF jdrop THEN jdrop = 0: jdset = 1
         FOR v = 0 TO 28: verrow(v) = verrow(v) - 1: NEXT v
         slidecount% = slidecount% - 1
-        CKT% = CKT% - 1
-        CKB% = CKB% - 1
+        'CKT% = CKT% - 1
+        'CKB% = CKB% - 1
         FOR n = 0 TO (atm - 1)
             IF MnS(n, 5) = 1 THEN
                 MnS(n, 2) = MnS(n, 2) - 1
@@ -1431,7 +1436,8 @@ DO
             FOR v = 0 TO 28: verrow(v) = verrow(v) + 8: NEXT v
             vert% = vert% + 1
         END IF
-        IF slidecount% = 0 AND jdset THEN jdrop = 1: jdset = 0
+        IF (vert% + 27) / 27 = scrcnt% THEN slidecount% = 0 'Stop the screen from scrolling if we've hit the bottom
+        'IF slidecount% = 0 AND jdset THEN jdrop = 1: jdset = 0
     END IF
 
     'STEP 5: Act out the next step in each monster's AI routine (this is a work-in-progress)
@@ -2601,6 +2607,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     RecSpot = 0
                 CASE 17 'Back to the Game!
                     _SNDPLAY SEF(4)
+                    Sector = 0: Selector = 1 'Bugfix: pressing ENTER on this option messes up the Pause menu
                     EXIT DO
                 CASE 18 'Back to the Menu!
                     _SNDPLAY SEF(4)
@@ -2638,6 +2645,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                 Selector = 2
             END IF
         CASE MovePause 'Press the PAUSE key again
+            IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix: hitting Pause from the ESC menu bugs the Pause menu
             EXIT DO
     END SELECT
     'ELSEIF cont% > 0 THEN 'Or you get this set if you're using a gamepad. (we should uncomment this, and add it in)
@@ -3558,7 +3566,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         ELSEIF Quadrant = 1 THEN 'The options in the "Start" (new game) menu.
             DRAW "C" + STR$(&HFFFFFFFF) + " BM80,85": Font "START FROM WHICH LEVEL?"
             DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 1", 110
-            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 2", 120
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 2", 120
             DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 3", 130
         ELSEIF Quadrant = 2 THEN 'The options in the "Options" menu.
             DRAW "C" + STR$(&HFFFFFFFF) + " BM126,65": Font "OPTIONS"
@@ -3591,7 +3599,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         IF Highlight = 3 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM107,145": Font "EXIT THE DEMO"
         'Second row is the options in the "Start" (new game) menu. I might replace this with an overworld map.
         IF Highlight = 4 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 1", 110
-        IF Highlight = 5 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 2", 120
+        IF Highlight = 5 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 2", 120
         IF Highlight = 6 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 3", 130
         'Third row is the options in the "Options" menu.
         IF Highlight = 7 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,75": Font "WEAPON OF CHOICE"
@@ -3835,6 +3843,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
                     EXIT DO
                 CASE 7 'Options > Weapon of Choice (select controller)
+                    'I'm thinking I should probably integrate all of the controller options into their own submenu.
                     _SNDPLAY SEF(8)
                     LINE (155, 75)-(319, 66), _RGBA32(0, 0, 0, 255), BF
                     cont% = cont% + 1
