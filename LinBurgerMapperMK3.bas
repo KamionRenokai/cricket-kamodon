@@ -295,46 +295,43 @@ DO
     'HUD drawing (tile placing) routine
 
     LINE (0, 0)-(639, 479), _RGB32(0, 0, 180), BF
-    LINE (0, 34)-(639, 479), _RGB32(160, 160, 160), B
+    LINE (0, 50)-(639, 479), _RGB32(160, 160, 160), B
     COLOR _RGB32(255, 255, 255), _RGB32(0, 0, 180)
     ' TODO: Make this scroll horizontally, so I can display more help information.
     LOCATE 1, 1: PRINT "This is how the map will look, in-game. Use the arrow keys to free-scroll."
-    DRAW "B M64, 14"
-    DrawBox 4
-    DRAW "B M129, 14"
-    DrawBox 4
-    DRAW "B M194, 14"
-    DrawBox 4
-    DRAW "B M415, 14"
-    DrawBox 3
-    DRAW "B M575, 14"
-    DrawBox 4
-    DRAW "B M8, 25 C" + STR$(&HFFFFFFFF)
-    Font "OPTIONS"
-    DRAW "B M75, 21 C" + STR$(&HFF777777)
+    DRAW "B M3, 31": DrawBox 4
+    DRAW "B M68, 31": DrawBox 4
+    DRAW "B M133, 31": DrawBox 4
+    DRAW "B M198, 31": DrawBox 4
+    DRAW "B M510, 31": DrawBox 4
+    DRAW "B M575, 31": DrawBox 4
+    DRAW "B M10, 38 C" + STR$(&HFFFFFFFF)
+    Font "ADD NEW"
+    DRAW "B M22, 45"
+    Font "TILE"
+    DRAW "B M79, 38"
     Font "CHANGE"
-    DRAW "B M69, 28"
-    Font "MAP SIZE"
-    DRAW "B M139, 21"
-    Font "CHANGE"
-    DRAW "B M136, 28"
-    Font "ELEMENT"
-    DRAW "B M205, 21"
+    DRAW "B M87, 45"
+    Font "TILE"
+    DRAW "B M143, 38"
     Font "DELETE"
-    DRAW "B M201, 28"
-    Font "ELEMENT"
-    DRAW "B M288, 25 C" + STR$(&HFFFFFFFF)
+    DRAW "B M151, 45"
+    Font "TILE"
+    DRAW "B M203, 38"
+    Font "EDIT MAP"
+    DRAW "B M203, 45"
+    Font "SETTINGS"
+
+    DRAW "B M282, 24"
     Font "PHRINGDOTT 1"
-    DRAW "B M426,21 C" + STR$(&HFFFFFF77)
+    DRAW "B M523,38 C" + STR$(&HFFFFFFFF)
+    Font "COLL-"
+    DRAW "B M523,45"
+    Font "ISION"
+    DRAW "B M589,38"
     Font "CHANGE"
-    DRAW "B M431,28"
+    DRAW "B M597,45"
     Font "LEVEL"
-    DRAW "B M495,25 C" + STR$(&HFFFFFFFF)
-    Font "VIEW MODE"
-    DRAW "B M589,21 C" + STR$(&HFF777777)
-    Font "WORLD"
-    DRAW "B M597,28"
-    Font "MAP"
 
     'Top row of the HUD
 
@@ -493,10 +490,10 @@ DO
     '        w = w + 1
     '    NEXT y
 
-    TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 40
-    TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 48
-    TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 0, 56
-    TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 0, 64
+    TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 56
+    TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 64
+    TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 350, 56
+    TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 350, 64
     TileFont STR$(sprnum(0)) + " * " + STR$(sprpos(0)) + " AND " + STR$(sprnum(1)) + " * " + STR$(sprpos(1)), 0, 471
     _DISPLAY 'This kills out the flicker, which really helps with this.
 
@@ -1146,10 +1143,10 @@ SELECT CASE BoxType%
         DRAW "R57"
 
     CASE 4 'Same as #3, except this one you can't select. It's disabled.
-        LINE STEP(0, 0)-STEP(61, 16), , B
+        LINE STEP(0, 0)-STEP(61, 16), _RGB32(160, 160, 160), B
         DRAW "B L61"
         DRAW "B U16"
-        LINE STEP(1, 1)-STEP(59, 14), , B
+        LINE STEP(1, 1)-STEP(59, 14), _RGB32(160, 160, 160), B
         DRAW "B L58"
         DRAW "B U13"
         DRAW "C" + STR$(&HFF222222)
