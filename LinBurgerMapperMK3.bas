@@ -91,7 +91,7 @@ DO UNTIL EOF(1)
     backA& = backA& + 1
 LOOP
 bg1& = backA& / (27 * scrcnt%)
-IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(bg1&)) + " sprites per row," + STR$(backA& / 27) + " rows." ELSE PRINT LTRIM$(STR$(bg1&)) + " sprites per row."
+IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(bg1&)) + " sprites per row," + STR$(backA& / bg1&) + " rows." ELSE PRINT LTRIM$(STR$(bg1&)) + " sprites per row."
 CLOSE #1
 
 OPEN BG2$ FOR INPUT AS #2
@@ -101,7 +101,7 @@ DO UNTIL EOF(2)
     backB& = backB& + 1
 LOOP
 bg2& = backB& / (27 * scrcnt%)
-IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(bg2&)) + " sprites per row," + STR$(backB& / 27) + " rows." ELSE PRINT LTRIM$(STR$(bg2&)) + " sprites per row."
+IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(bg2&)) + " sprites per row," + STR$(backB& / bg2&) + " rows." ELSE PRINT LTRIM$(STR$(bg2&)) + " sprites per row."
 CLOSE #2
 
 OPEN FG1$ FOR INPUT AS #3
@@ -111,7 +111,7 @@ DO UNTIL EOF(3)
     frontA& = frontA& + 1
 LOOP
 fg1& = frontA& / (27 * scrcnt%)
-IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(fg1&)) + " sprites per row," + STR$(frontA& / 27) + " rows." ELSE PRINT LTRIM$(STR$(fg1&)) + " sprites per row."
+IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(fg1&)) + " sprites per row," + STR$(frontA& / fg1&) + " rows." ELSE PRINT LTRIM$(STR$(fg1&)) + " sprites per row."
 CLOSE #3
 
 OPEN FG2$ FOR INPUT AS #4
@@ -121,7 +121,7 @@ DO UNTIL EOF(4)
     frontB& = frontB& + 1
 LOOP
 fg2& = frontB& / (27 * scrcnt%)
-IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(fg2&)) + " sprites per row," + STR$(frontB& / 27) + " rows." ELSE PRINT LTRIM$(STR$(fg2&)) + " sprites per row."
+IF scrcnt% > 1 THEN PRINT LTRIM$(STR$(fg2&)) + " sprites per row," + STR$(frontB& / fg2&) + " rows." ELSE PRINT LTRIM$(STR$(fg2&)) + " sprites per row."
 CLOSE #4
 
 OPEN BG1$ FOR INPUT AS #1
@@ -264,13 +264,13 @@ tick = 400
 DIM sprseg(0 TO 80) AS INTEGER 'How much of each column is on-screen (in 8ths)
 DIM sprnum(0 TO 80) AS INTEGER 'Which sprites are on the screen
 DIM sprpos(0 TO 80) AS INTEGER 'The X coordinate of each column of sprites
-DIM verrow(0 TO 56) AS INTEGER 'The Y coordinate of each row of sprites
+DIM verrow(0 TO 60) AS INTEGER 'The Y coordinate of each row of sprites
 FOR n = 0 TO 80 '(tsc - 1)
     sprseg(n) = 8
     sprnum(n) = (n - 1)
     sprpos(n) = ((n - 1) * 8)
 NEXT n
-FOR n = 0 TO 56: verrow(n) = ((n - 1) * 8): NEXT n
+FOR n = 0 TO 60: verrow(n) = ((n - 1) * 8): NEXT n
 'sprseg(0) = 8
 'sprnum(0) = 0
 'sprpos(0) = -8
@@ -303,47 +303,41 @@ DO
     DRAW "B M68, 31": DrawBox 4
     DRAW "B M133, 31": DrawBox 4
     DRAW "B M198, 31": DrawBox 4
+    DRAW "B M263, 31": DrawBox 4
+    DRAW "B M328, 31": DrawBox 4
     DRAW "B M510, 31": DrawBox 4
     DRAW "B M575, 31": DrawBox 4
-    DRAW "B M10, 38 C" + STR$(&HFFFFFFFF)
-    Font "ADD NEW"
-    DRAW "B M22, 45"
-    Font "TILE"
-    DRAW "B M79, 38"
-    Font "CHANGE"
-    DRAW "B M87, 45"
-    Font "TILE"
-    DRAW "B M143, 38"
-    Font "DELETE"
-    DRAW "B M151, 45"
-    Font "TILE"
-    DRAW "B M203, 38"
-    Font "EDIT MAP"
-    DRAW "B M203, 45"
-    Font "SETTINGS"
+    DRAW "B M8, 38 C" + STR$(&HFFFFFFFF): Font "EDIT MAP"
+    DRAW "B M8, 45": Font "SETTINGS"
+    DRAW "B M79, 38": Font "CHANGE"
+    DRAW "B M87, 45": Font "TILE"
+    DRAW "B M143, 38": Font "DELETE"
+    DRAW "B M151, 45": Font "TILE"
+    DRAW "B M205, 38": Font "ADD NEW"
+    DRAW "B M205, 45": Font "MONSTER"
+    DRAW "B M274, 38": Font "CHANGE"
+    DRAW "B M270, 45": Font "MONSTER"
+    DRAW "B M336, 38": Font "TRIGGER"
+    DRAW "B M336, 45": Font "OPTIONS"
 
-    DRAW "B M282, 24"
-    Font "PHRINGDOTT 1"
-    DRAW "B M523,38 C" + STR$(&HFFFFFFFF)
-    Font "COLL-"
-    DRAW "B M523,45"
-    Font "ISION"
-    DRAW "B M589,38"
-    Font "CHANGE"
-    DRAW "B M597,45"
-    Font "LEVEL"
+    DRAW "B M282, 24": Font "PHRINGDOTT 1"
+
+    DRAW "B M525,38": Font "COLL-"
+    DRAW "B M525,45": Font "ISION"
+    DRAW "B M585,38": Font "CHANGE"
+    DRAW "B M590,45": Font "LEVEL"
 
     'Top row of the HUD
 
     'Tile rendering routine -- draw each layer onto the screen, in sequence
-    FOR y = 0 TO 56 'Originally 28
+    FOR y = 0 TO 60 'Originally 28; 56 was the sweet spot, but 60 worked, too
         FOR x = 0 TO 80 'Originally 41 (80's good, and 82 works, too)
             'LOCATE 1, 1: PRINT "COLUMN: " + LTRIM$(STR$(w)) + "  ROW: " + LTRIM$(STR$(y)) + "  LEFTMOST: " + STR$(sprpos(0))
-            IF sprnum(x) >= 0 AND verrow(y) < 360 THEN '352 is pretty good. It was originally "verrow(y) < 176"
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Background1((w - 1) + y, sprnum(x))), _CLIP PSET
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Background2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Foreground1((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Foreground2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+            IF sprnum(x) >= 0 AND verrow(y) < 400 THEN '360/380 are pretty good. It was originally "verrow(y) < 176"
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background1((w - 1) + y, sprnum(x))), _CLIP PSET
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground1((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
             END IF
         NEXT x
     NEXT y
@@ -490,26 +484,28 @@ DO
     '        w = w + 1
     '    NEXT y
 
-    TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 56
-    TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 64
-    TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 350, 56
-    TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 350, 64
+    LINE (0, 55)-(639, 69), _RGB32(0, 0, 180), BF
+    LINE (0, 462)-(639, 469), _RGB32(0, 0, 180), BF
+    TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 52
+    TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 60
+    TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 350, 52
+    TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 350, 60
     TileFont STR$(sprnum(0)) + " * " + STR$(sprpos(0)) + " AND " + STR$(sprnum(1)) + " * " + STR$(sprpos(1)), 0, 471
     _DISPLAY 'This kills out the flicker, which really helps with this.
 
     'Before we check for user key presses, do we need to scroll the screen?
     IF slidecount% < 0 THEN 'Are we scrolling the screen downward?
-        FOR v = 0 TO 56: verrow(v) = verrow(v) + 1: NEXT v
+        FOR v = 0 TO 60: verrow(v) = verrow(v) + 1: NEXT v
         slidecount% = slidecount% + 1
         IF verrow(0) >= 0 THEN
-            FOR v = 0 TO 56: verrow(v) = verrow(v) - 8: NEXT v
+            FOR v = 0 TO 60: verrow(v) = verrow(v) - 8: NEXT v
             w = w - 1 'Should become vert% = vert% - 1
         END IF
     ELSEIF slidecount% > 0 THEN 'Or are we scrolling the screen upward?
-        FOR v = 0 TO 56: verrow(v) = verrow(v) - 1: NEXT v
+        FOR v = 0 TO 60: verrow(v) = verrow(v) - 1: NEXT v
         slidecount% = slidecount% - 1
         IF verrow(0) <= -16 THEN
-            FOR v = 0 TO 56: verrow(v) = verrow(v) + 8: NEXT v
+            FOR v = 0 TO 60: verrow(v) = verrow(v) + 8: NEXT v
             w = w + 1 'Should become vert% = vert% + 1
         END IF
     END IF
@@ -557,7 +553,7 @@ DO
         ' 20480 - DOWN arrow key
         '******************
     ELSEIF _KEYDOWN(20480) AND slidecount% = 0 THEN
-        IF (w + 27) / 27 < scrcnt% THEN slidecount% = 1
+        IF verrow(59) < (scrcnt% * 27) * 8 THEN slidecount% = 1
 
         'ELSEIF kp& = 114 THEN 'Pressing R resets Cricket's position (DEBUG key)
         '    CKT% = 24
