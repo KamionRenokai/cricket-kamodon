@@ -280,13 +280,13 @@ tick = 400
 DIM sprseg(0 TO 80) AS INTEGER 'How much of each column is on-screen (in 8ths)
 DIM sprnum(0 TO 80) AS INTEGER 'Which sprites are on the screen
 DIM sprpos(0 TO 80) AS INTEGER 'The X coordinate of each column of sprites
-DIM verrow(0 TO 56) AS INTEGER 'The Y coordinate of each row of sprites
+DIM verrow(0 TO 60) AS INTEGER 'The Y coordinate of each row of sprites
 FOR n = 0 TO 80 '(tsc - 1)
     sprseg(n) = 8
     sprnum(n) = (n - 1)
     sprpos(n) = ((n - 1) * 8)
 NEXT n
-FOR n = 0 TO 56: verrow(n) = ((n - 1) * 8): NEXT n
+FOR n = 0 TO 60: verrow(n) = ((n - 1) * 8): NEXT n
 'sprseg(0) = 8
 'sprnum(0) = 0
 'sprpos(0) = -8
@@ -315,54 +315,45 @@ DO
     COLOR _RGB32(255, 255, 255), _RGB32(0, 0, 180)
     ' TODO: Make this scroll horizontally, so I can display more help information.
     LOCATE 1, 1: PRINT "This is how the map will look, in-game. Use the arrow keys to free-scroll."
-    DRAW "B M64, 14"
-    DrawBox 4
-    DRAW "B M129, 14"
-    DrawBox 4
-    DRAW "B M194, 14"
-    DrawBox 4
-    DRAW "B M415, 14"
-    DrawBox 3
-    DRAW "B M575, 14"
-    DrawBox 4
-    DRAW "B M8, 25 C" + STR$(&HFFFFFFFF)
-    Font "OPTIONS"
-    DRAW "B M75, 21 C" + STR$(&HFF777777)
-    Font "CHANGE"
-    DRAW "B M69, 28"
-    Font "MAP SIZE"
-    DRAW "B M139, 21"
-    Font "CHANGE"
-    DRAW "B M136, 28"
-    Font "ELEMENT"
-    DRAW "B M205, 21"
-    Font "DELETE"
-    DRAW "B M201, 28"
-    Font "ELEMENT"
-    DRAW "B M288, 25 C" + STR$(&HFFFFFFFF)
-    Font "PHRINGDOTT 1"
-    DRAW "B M426,21 C" + STR$(&HFFFFFF77)
-    Font "CHANGE"
-    DRAW "B M431,28"
-    Font "LEVEL"
-    DRAW "B M495,25 C" + STR$(&HFFFFFFFF)
-    Font "VIEW MODE"
-    DRAW "B M589,21 C" + STR$(&HFF777777)
-    Font "WORLD"
-    DRAW "B M597,28"
-    Font "MAP"
+	DRAW "B M3, 31": DrawBox 4
+    DRAW "B M68, 31": DrawBox 4
+    DRAW "B M133, 31": DrawBox 4
+    DRAW "B M198, 31": DrawBox 4
+    DRAW "B M263, 31": DrawBox 4
+	DRAW "B M328, 31": DrawBox 4
+	DRAW "B M415, 31": DrawBox 4
+    DRAW "B M575, 31": DrawBox 4
+	DRAW "B M8, 38 C" + STR$(&HFFFFFFFF): Font "EDIT MAP"
+	DRAW "B M8, 45": Font "SETTINGS"
+	DRAW "B M79, 38": Font "CHANGE"
+	DRAW "B M87, 45": Font "TILE"
+	DRAW "B M143, 38": Font "DELETE"
+	DRAW "B M151, 45": Font "TILE"
+	DRAW "B M205, 38": Font "ADD NEW"
+	DRAW "B M205, 45": Font "MONSTER"
+	DRAW "B M274, 38": Font "CHANGE"
+	DRAW "B M270, 45": Font "MONSTER"
+	DRAW "B M336, 38": Font "TRIGGER"
+	DRAW "B M336, 45": Font "OPTIONS"
+	
+	DRAW "B M282, 24": Font "PHRINGDOTT 1"
+	
+	DRAW "B M525, 38": Font "COLL-"
+	DRAW "B M525, 45": Font "ISION"
+	DRAW "B M585, 38": Font "CHANGE
+	DRAW "B M590, 45": Font "LEVEL"
 
     'Top row of the HUD
 
     'Tile rendering routine -- draw each layer onto the screen, in sequence
-    FOR y = 0 TO 56 'Originally 28
+    FOR y = 0 TO 60 'Originally 28
         FOR x = 0 TO 80 'Originally 41 (80's good, and 82 works, too)
             'LOCATE 1, 1: PRINT "COLUMN: " + LTRIM$(STR$(w)) + "  ROW: " + LTRIM$(STR$(y)) + "  LEFTMOST: " + STR$(sprpos(0))
-            IF sprnum(x) >= 0 AND verrow(y) < 360 THEN '352 is pretty good. It was originally "verrow(y) < 176"
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Background1((w - 1) + y, sprnum(x))), _CLIP PSET
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Background2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Foreground1((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                IF y > 0 AND (w - 1) > -1 THEN PUT (sprpos(x), 71 + verrow(y)), tile(0, Foreground2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+            IF sprnum(x) >= 0 AND verrow(y) < 400 THEN '352 is pretty good. It was originally "verrow(y) < 176"
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background1((w - 1) + y, sprnum(x))), _CLIP PSET
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground1((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
             END IF
         NEXT x
     NEXT y
@@ -516,33 +507,29 @@ DO
     '        w = w + 1
     '    NEXT y
 
-    TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 40
-    TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 48
-    TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 0, 56
-    TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 0, 64
+	LINE (0, 55)-(639, 69), _RGB32(0, 0, 180), BF
+	LINE (0, 462)-(639, 469), _RGB32(0, 0, 180), BF
+    TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 52
+    TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 60
+    TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 350, 52
+    TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 350, 60
     TileFont STR$(sprnum(0)) + " * " + STR$(sprpos(0)) + " AND " + STR$(sprnum(1)) + " * " + STR$(sprpos(1)), 0, 471
     _DISPLAY 'This kills out the flicker, which really helps with this.
 
     'Before we check for user key presses, do we need to scroll the screen?
     IF slidecount% < 0 THEN 'Are we scrolling the screen downward?
-        'IF jdrop THEN jdrop = 0
-        FOR v = 0 TO 56: verrow(v) = verrow(v) + 1: NEXT v
+        FOR v = 0 TO 60: verrow(v) = verrow(v) + 1: NEXT v
         slidecount% = slidecount% + 1
         IF verrow(0) >= 0 THEN
-            FOR v = 0 TO 56: verrow(v) = verrow(v) - 8: NEXT v
+            FOR v = 0 TO 60: verrow(v) = verrow(v) - 8: NEXT v
             w = w - 1 'Should become vert% = vert% - 1
-            'CKT% = CKT% + 6 'Move Cricket down six pixels each time, too.
-            'CKB% = CKB% + 6
         END IF
     ELSEIF slidecount% > 0 THEN 'Or are we scrolling the screen upward?
-        'IF jdrop THEN jdrop = 0
-        FOR v = 0 TO 56: verrow(v) = verrow(v) - 1: NEXT v
+        FOR v = 0 TO 60: verrow(v) = verrow(v) - 1: NEXT v
         slidecount% = slidecount% - 1
         IF verrow(0) <= -16 THEN
-            FOR v = 0 TO 56: verrow(v) = verrow(v) + 8: NEXT v
+            FOR v = 0 TO 60: verrow(v) = verrow(v) + 8: NEXT v
             w = w + 1 'Should become vert% = vert% + 1
-            'CKT% = CKT% - 6 'Move Cricket up six pixels each time, too.
-            'CKB% = CKB% - 6
         END IF
     END IF
 
@@ -552,81 +539,11 @@ DO
     ' 19200 - LEFT arrow key
     '********************
     IF _KEYDOWN(19200) THEN
-        'IF _KEYDOWN(122) THEN 'Hold down Z
-        '    FOR q = 0 TO (tsc - 1)
-        '        sprpos(q) = sprpos(q) + 2
-        '    NEXT q
-        'ELSE
-        'IF _KEYDOWN(120) AND jdrop = 0 THEN 'Holding down JUMP
-        '    IF jump% = -2 THEN jump% = 0 'Jump off from a ladder/beanstalk.
-        '    IF jump% = 0 THEN plyr& = jump&: CKB% = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
-        '    IF _KEYDOWN(122) THEN 'The player jumps higher if it's running!
-        '        IF jump% < 60 THEN
-        '            notop = 0
-        '            IF CKT% <= 32 THEN 'Bugfix. If nothing's above him, he just jumps.
-        '                CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            ELSEIF CKT% > 32 THEN
-        '                FOR Head = 0 TO sn
-        '                    IF LevelData(w + (PRow - 5), AboveHead(Head)) = 2 THEN
-        '                        jdrop = 1 'Stop jumping if something's above his head
-        '                        'Maybe add the sound of him hitting his head?
-        '                    ELSE
-        '                        notop = notop + 1 'One of the tiles isn't a wall
-        '                    END IF
-        '                NEXT Head 'Below: jump if the 3 or 4 tiles above aren't walls
-        '                IF notop > 2 THEN CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            END IF
-        '        ELSE
-        '            jump% = 0
-        '            jdrop = 1
-        '        END IF
-        '    ELSE
-        '        IF jump% < 42 THEN
-        '            notop = 0
-        '            IF CKT% <= 32 THEN 'Bugfix. If nothing's above him, he just jumps.
-        '                CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            ELSEIF CKT% > 32 THEN
-        '                FOR Head = 0 TO sn
-        '                    IF LevelData(w + (PRow - 5), AboveHead(Head)) = 2 THEN
-        '                        jdrop = 1 'Stop jumping if something's above his head
-        '                        'Maybe add the sound of him hitting his head?
-        '                    ELSE
-        '                        notop = notop + 1 'One of the tiles isn't a wall
-        '                    END IF
-        '                NEXT Head 'Below: jump if the 3 or 4 tiles above aren't walls
-        '                IF notop > 2 THEN CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            END IF
-        '        ELSE
-        '            jump% = 0
-        '            jdrop = 1
-        '        END IF
-        '    END IF
-        'END IF
-        'IF kp& = -120 THEN jdrop = 1 'If you let go of the JUMP key early
-        'IF jdrop THEN 'When you let go of JUMP
-        '    IF plyr& <> stand& THEN plyr& = stand&: CKB% = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
-        '    CKT% = CKT% + 1
-        '    CKB% = CKB% + 1
-        'END IF
-        'Check for collisions, before we decide if we can move, or not
-        'noblock = 0
-        'FOR cr = 0 TO so 'Apparently this throws an error, on the top screen.
-        '    IF LevelData(w + BehindMoi(cr), topleft) <> 2 THEN 'Wall
-        '        noblock = noblock + 1
-        '    END IF
-        'NEXT cr
-        'IF noblock > 3 AND CKX% > 0 THEN 'If nothing's in our way, let's move!
-        pf = 1 'pf is TRUE, meaning the player is facing LEFT.
         IF sprnum(0) > -1 THEN 'Scroll the background (CKL% > 148)
             FOR q = 0 TO 80 '(tsc - 1)
                 sprpos(q) = sprpos(q) + 1
             NEXT q
             CKX% = CKX% - 1
-            'ELSEIF CKL% < 148 THEN
-            'ELSEIF sprnum(0) = -1 AND sprpos(0) = -8 THEN 'Move the player
-            '    CKL% = CKL% - 1: CKR% = CKR% - 1: CKX% = CKX% - 1
-            'END IF
-            'END IF
         END IF
         IF sprpos(0) >= 0 THEN 'Do we need to reset the column positions?
             FOR q = 0 TO 80
@@ -634,130 +551,33 @@ DO
                 sprnum(q) = sprnum(q) - 1 'Change the displayed sprite
             NEXT q
         END IF
-        '*********************
-        ' 19712 - RIGHT arrow key
-        '*********************
-    ELSEIF _KEYDOWN(19712) THEN
-        'IF _KEYDOWN(122) THEN 'Hold down Z
-        '    FOR q = 0 TO (tsc - 1)
-        '        sprpos(q) = sprpos(q) - 2
-        '    NEXT q
-        'ELSE
-        'IF _KEYDOWN(120) AND jdrop = 0 THEN 'Holding down JUMP
-        '    IF jump% = -2 THEN jump% = 0 'Jump off from a ladder/beanstalk.
-        '    IF jump% = 0 THEN plyr& = jump&: CKB% = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
-        '    IF _KEYDOWN(122) THEN 'The player jumps higher if it's running!
-        '        'Maybe copy this routine to the UP and DOWN arrow routines?
-        '        IF jump% < 60 THEN
-        '            notop = 0
-        '            IF CKT% <= 32 THEN 'Bugfix. If nothing's above him, he just jumps.
-        '                CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            ELSEIF CKT% > 32 THEN
-        '                FOR Head = 0 TO sn
-        '                    IF LevelData(w + (PRow - 5), AboveHead(Head)) = 2 THEN
-        '                        jdrop = 1 'Stop jumping if something's above his head
-        '                        'Maybe add the sound of him hitting his head?
-        '                    ELSE
-        '                        notop = notop + 1 'One of the tiles isn't a wall
-        '                    END IF
-        '                NEXT Head 'Below: jump if the 3 or 4 tiles above aren't walls
-        '                IF notop > 2 THEN CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            END IF
-        '        ELSE
-        '            jump% = 0
-        '            jdrop = 1
-        '        END IF
-        '    ELSE
-        '        IF jump% < 42 THEN
-        '            notop = 0
-        '            IF CKT% <= 32 THEN 'Bugfix. If nothing's above him, he just jumps.
-        '                CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            ELSEIF CKT% > 32 THEN
-        '                FOR Head = 0 TO sn
-        '                    IF LevelData(w + (PRow - 5), AboveHead(Head)) = 2 THEN
-        '                        jdrop = 1 'Stop jumping if something's above his head
-        '                        'Maybe add the sound of him hitting his head?
-        '                    ELSE
-        '                        notop = notop + 1 'One of the tiles isn't a wall
-        '                    END IF
-        '                NEXT Head 'Below: jump if the 3 or 4 tiles above aren't walls
-        '                IF notop > 2 THEN CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '            END IF
-        '        ELSE
-        '            jump% = 0
-        '            jdrop = 1
-        '        END IF
-        '    END IF
-        'END IF
-        'IF kp& = -120 THEN jdrop = 1 'If you let go of the JUMP key early
-        'IF jdrop THEN 'When you let go of JUMP
-        '    IF plyr& <> stand& THEN plyr& = stand&: CKB% = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
-        '    CKT% = CKT% + 1
-        '    CKB% = CKB% + 1
-        'END IF
-        'Check for collisions, before we decide if we can move, or not
-        'noblock = 0
-        'FOR cr = 0 TO so
-        '    IF LevelData(w + InFrontOf(cr), topright) <> 2 THEN 'Wall
-        '        noblock = noblock + 1
-        '    END IF
-        'NEXT cr
-        'IF noblock > 3 THEN 'If nothing's in our way, where do we move?
-        pf = 0 'pf is FALSE, meaning the player is facing RIGHT.
+	END IF
+    '*********************
+    ' 19712 - RIGHT arrow key
+    '*********************
+    IF _KEYDOWN(19712) THEN
         IF sprnum(0) >= -1 THEN 'CKL = 148
             FOR q = 0 TO 80 '(tsc - 1)
                 sprpos(q) = sprpos(q) - 1
             NEXT q
             CKX% = CKX% + 1
-            'ELSEIF CKL% < 148 THEN
-            '    CKL% = CKL% + 1: CKR% = CKR% + 1: CKX% = CKX% + 1
-            'END IF
         END IF
-        'END IF
         IF sprpos(0) <= -8 THEN 'Do we need to reset the column positions?
             FOR q = 0 TO 80
                 sprpos(q) = sprpos(q) + 8
                 sprnum(q) = sprnum(q) + 1
             NEXT q
         END IF
-        '*********************
-        ' 18432 - UP arrow key
-        '*********************
-    ELSEIF _KEYDOWN(18432) AND slidecount% = 0 THEN
-        'climb = 0 'BUG: You freeze in midair if you jump, then hit UP or DOWN.
-        'A temporary fix is to move the UP/DOWN arrow key routines so they're
-        'run before the X (jump) key routine, but then you can't climb any-
-        'thing unless you're on the ground.
-        'FOR cc = 0 TO sn
-        '    IF LevelData(w + (PRow - 1), AboveHead(cc)) = 3 THEN
-        '        climb = climb + 1 'If Cricket can climb what's above him
-        '    END IF
-        'NEXT cc 'If he's in front of two climbable tiles, let's climb up!
-        'IF climb = 2 THEN
-        '    IF plyr& <> climb& THEN plyr& = climb&: CKR% = CKL% + (_WIDTH(plyr&) - 1): CKB% = CKT% + (_HEIGHT(plyr&) - 1)
-        '    CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = -2: jdrop = 0
-        'END IF
-        IF w > 0 THEN slidecount% = -1
-        '******************
-        ' 20480 - DOWN arrow key
-        '******************
-    ELSEIF _KEYDOWN(20480) AND slidecount% = 0 THEN
-        'The check to see if, while the player is on a climbable object, a
-        'wall or platform is right below them, should be fixed, and re-added.
-        'climb = 0
-        'FOR cc = 0 TO sn
-        '    IF LevelData(w + (PRow - 1), AboveHead(cc)) = 3 THEN
-        '        climb = climb + 1 'If Cricket can climb what's below him
-        '        'Find a way to fix, and re-implement the code below.
-        '        'ELSEIF LevelData(w + PRow, AboveHead(cc)) = 1 OR 2 THEN
-        '        'climb = 0 'Stop him from sliding if he lands on something
-        '    END IF
-        'NEXT cc 'If he's in front of two climbable tiles, let's slide!
-        'IF climb = 2 THEN
-        '    IF plyr& <> climb& THEN plyr& = climb&: CKR% = CKL% + (_WIDTH(plyr&) - 1): CKB% = CKT% + (_HEIGHT(plyr&) - 1)
-        '    CKT% = CKT% + 1: CKB% = CKB% + 1: jump% = -2: jdrop = 0
-        'END IF
-        slidecount% = 1
+	END IF
+    '*********************
+    ' 18432 - UP arrow key
+    '*********************
+    IF _KEYDOWN(18432) AND slidecount% = 0 THEN IF w > 0 THEN slidecount% = -1
+
+    '******************
+    ' 20480 - DOWN arrow key
+    '******************
+    IF _KEYDOWN(20480) AND slidecount% = 0 THEN IF w + 60 < scrcnt * 27 THEN slidecount% = 1
 
         'ELSEIF kp& = 114 THEN 'Pressing R resets Cricket's position (DEBUG key)
         '    CKT% = 24
@@ -792,18 +612,7 @@ DO
         '        jdrop = 1
         '    END IF
         '
-    ELSEIF kp& = 43 THEN 'The PLUS (+) key scrolls the screen down (DEBUG)
-        IF w < startw THEN
-            'w = w + 1
-            slidecount% = 176
-        END IF
-    ELSEIF kp& = 45 THEN 'The MINUS (-) key scrolls the screen up (DEBUG)
-        IF w > 0 THEN
-            'w = w - 1
-            slidecount% = -176
-        END IF
 
-    END IF
 LOOP UNTIL _KEYDOWN(27) 'Press ESC to end the test.
 
 'The FONT subcommand will have to be reworked, to use a tile-based font.
