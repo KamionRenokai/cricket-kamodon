@@ -284,7 +284,7 @@ IF dev > 2 THEN 'The first two are the keyboard and mouse.
         ContPrst(j - 2, 1) = "PlayStation Controller" 'PS3 controller support.
         ContPrst(j - 2, 2) = "Custom" 'Whatever gamepad button-maps you like.
         'I bet an Xbox 360 controller probably has "unique" button maps, too.
-        IF (j - 2) MOD 2 = 0 THEN 'Even-numbered gamepads (2 or 4)
+        IF (j - 2) MOD 2 = 0 THEN 'Even-numbered gamepads (2 or 4) <-- MAKE THIS WORK PROPERLY FOR THE 4TH GAMEPAD!!
             DefKeys(j - 2, 0, 0, 0) = 5: DefKeys(j - 2, 0, 1, 0) = 3: DefKeys(j - 2, 0, 2, 0) = 1
             DefKeys(j - 2, 0, 0, 1) = 250: DefKeys(j - 2, 0, 1, 1) = 3: DefKeys(j - 2, 0, 2, 1) = 1
             DefKeys(j - 2, 0, 0, 2) = 5: DefKeys(j - 2, 0, 1, 2) = 2: DefKeys(j - 2, 0, 2, 2) = 1
@@ -302,7 +302,7 @@ IF dev > 2 THEN 'The first two are the keyboard and mouse.
             DefKeys(j - 2, 1, 0, 5) = 59: DefKeys(j - 2, 1, 1, 5) = (j - 2): DefKeys(j - 2, 1, 2, 5) = 0
             DefKeys(j - 2, 1, 0, 6) = 55: DefKeys(j - 2, 1, 1, 6) = (j - 2): DefKeys(j - 2, 1, 2, 6) = 0
             DefKeys(j - 2, 1, 0, 7) = 15: DefKeys(j - 2, 1, 1, 7) = (j - 2): DefKeys(j - 2, 1, 2, 7) = 0
-        ELSE 'Odd-numbered gamepads (1, 3, or 5)
+        ELSE 'Odd-numbered gamepads (1, 3, or 5) <-- MAKE THIS WORK PROPERLY FOR THE 3RD AND 5TH GAMEPADS!!
             DefKeys(j - 2, 0, 0, 0) = 5: DefKeys(j - 2, 0, 1, 0) = 1: DefKeys(j - 2, 0, 2, 0) = 1
             DefKeys(j - 2, 0, 0, 1) = 250: DefKeys(j - 2, 0, 1, 1) = 1: DefKeys(j - 2, 0, 2, 1) = 1
             DefKeys(j - 2, 0, 0, 2) = 5: DefKeys(j - 2, 0, 1, 2) = 0: DefKeys(j - 2, 0, 2, 2) = 1
@@ -864,38 +864,40 @@ ELSE 'But if it is, then let's DIM them properly
     DIM SHARED TrigPos(atm - 1, 0 TO 3) AS STRING 'Corresponding number, direction facing, and tile coordinates
 END IF
 
-FOR d = 0 TO (adm - 1)
-    INPUT #6, a$, b$, c$ 'For testing purposes, these should read "000", "ENEMY" and "ShyGuy.png".
-    a% = VAL(a$) 'This is a number, so we'll convert it to an integer
-    'TODO: We'll need to put additional lines in for each type, like "ENEMY", "BOSS" and "ACTION".
-    ActionType(a%) = b$
-    IF UCASE$(b$) = "ENEMY" THEN
-        MonsterAnim(a%, 0, 0) = _LOADIMAGE(respath$ + monfldr$ + c$)
-        'TODO: Once monster coordinates have been refined, have the game set them up from this routine.
-    ELSEIF UCASE$(b$) = "BOSS" THEN
-        MonsterAnim(a%, 0, 0) = _LOADIMAGE(respath$ + monfldr$ + c$)
-        'Work-in-progress...
-    ELSEIF UCASE$(b$) = "ACTION" THEN
-        'Work-in-progress...
-    ELSE 'Throw an error?
-    END IF
-NEXT d
+IF NOT owld THEN
+    FOR d = 0 TO (adm - 1)
+        INPUT #6, a$, b$, c$ 'For testing purposes, these should read "000", "ENEMY" and "ShyGuy.png".
+        a% = VAL(a$) 'This is a number, so we'll convert it to an integer
+        'TODO: We'll need to put additional lines in for each type, like "ENEMY", "BOSS" and "ACTION".
+        ActionType(a%) = b$
+        IF UCASE$(b$) = "ENEMY" THEN
+            MonsterAnim(a%, 0, 0) = _LOADIMAGE(respath$ + monfldr$ + c$)
+            'TODO: Once monster coordinates have been refined, have the game set them up from this routine.
+        ELSEIF UCASE$(b$) = "BOSS" THEN
+            MonsterAnim(a%, 0, 0) = _LOADIMAGE(respath$ + monfldr$ + c$)
+            'Work-in-progress...
+        ELSEIF UCASE$(b$) = "ACTION" THEN
+            'Work-in-progress...
+        ELSE 'Throw an error?
+        END IF
+    NEXT d
 
-FOR t = 0 TO (atm - 1) 'Set up each enemy (work-in-progress)
-    INPUT #7, j$, k$, l$, m$ 'For testing purposes, the first line should read "000", "R", "130" and "18".
-    TrigPos(t, 0) = j$: TrigPos(t, 1) = k$: TrigPos(t, 2) = l$: TrigPos(t, 3) = m$
-    j% = VAL(j$) 'Since this is a number, let's turn it into an integer, as that'll help us better.
-    'TODO: Check the first number against MonsterAnim and ActionType, and read more options if it's an ACTION type.
-    'Right now, the spawning routine in the main game loop overwrites these. Should I keep this part in, anyway?
-    'MnS(t, 0) = (VAL(TrigPos(t, 3)) * 8) - 8
-    'MnS(t, 1) = MnS(t, 0) + (_WIDTH(MonsterAnim(j%, 0, 0)) - 1)
-    'dvs = VAL(TrigPos(t, 2)) / 27
-    'rm = VAL(TrigPos(t, 2)) MOD 27
-    'IF rm > 13 THEN dvs = dvs - 1 'Currently, the main game routine overwrites MnS(?, 2) and MnS(?, 3) when spawning.
-    'MnS(t, 2) = (VAL(TrigPos(t, 2)) - (dvs * 27)) * 8 '(VAL(TrigPos(t, 2)) - vert%) * 8
-    'MnS(t, 3) = MnS(t, 2) + _HEIGHT(MonsterAnim(j%, 0, 0))
-    MnS(t, 4) = VAL(TrigPos(t, 3)) * 8 'Except the global X coordinate. The spawning routine doesn't touch this, yet.
-NEXT t
+    FOR t = 0 TO (atm - 1) 'Set up each enemy (work-in-progress)
+        INPUT #7, j$, k$, l$, m$ 'For testing purposes, the first line should read "000", "R", "130" and "18".
+        TrigPos(t, 0) = j$: TrigPos(t, 1) = k$: TrigPos(t, 2) = l$: TrigPos(t, 3) = m$
+        j% = VAL(j$) 'Since this is a number, let's turn it into an integer, as that'll help us better.
+        'TODO: Check the first number against MonsterAnim and ActionType, and read more options if it's an ACTION type.
+        'Right now, the spawning routine in the main game loop overwrites these. Should I keep this part in, anyway?
+        'MnS(t, 0) = (VAL(TrigPos(t, 3)) * 8) - 8
+        'MnS(t, 1) = MnS(t, 0) + (_WIDTH(MonsterAnim(j%, 0, 0)) - 1)
+        'dvs = VAL(TrigPos(t, 2)) / 27
+        'rm = VAL(TrigPos(t, 2)) MOD 27
+        'IF rm > 13 THEN dvs = dvs - 1 'Currently, the main game routine overwrites MnS(?, 2) and MnS(?, 3) when spawning.
+        'MnS(t, 2) = (VAL(TrigPos(t, 2)) - (dvs * 27)) * 8 '(VAL(TrigPos(t, 2)) - vert%) * 8
+        'MnS(t, 3) = MnS(t, 2) + _HEIGHT(MonsterAnim(j%, 0, 0))
+        MnS(t, 4) = VAL(TrigPos(t, 3)) * 8 'Except the global X coordinate. The spawning routine doesn't touch this, yet.
+    NEXT t
+END IF
 
 'First, we see how many times we'll have to run through a loop, and grab the
 'background and foreground layer data, as well as the level data itself. I
@@ -1074,13 +1076,9 @@ DO
         FOR x = 0 TO 41 '(tsc - 1)
             'LOCATE 1, 1: PRINT "COLUMN: " + LTRIM$(STR$(w)) + "  ROW: " + LTRIM$(STR$(y)) + "  LEFTMOST: " + STR$(sprpos(0))
             IF sprnum(x) >= 0 AND verrow(y) < 216 THEN
-                'IF y = 0 AND (vert% - 1) = -1 THEN ELSE _PUTIMAGE (sprpos(x), 24 + verrow(y)), spritedata(Background1((vert% - 1) + y, sprnum(x)), 0)
                 IF y = 0 AND (vert% - 1) = -1 THEN ELSE PUT (sprpos(x), 24 + verrow(y)), spritedata(f * 80, Background1((vert% - 1) + y, sprnum(x))), _CLIP PSET
-                'IF y = 0 AND (vert% - 1) = -1 THEN ELSE _PUTIMAGE (sprpos(x), 24 + verrow(y)), spritedata(Background2((vert% - 1) + y, sprnum(x)), 0)
                 IF y = 0 AND (vert% - 1) = -1 THEN ELSE PUT (sprpos(x), 24 + verrow(y)), spritedata(f * 80, Background2((vert% - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                'IF y = 0 AND (vert% - 1) = -1 THEN ELSE _PUTIMAGE (sprpos(x), 24 + verrow(y)), spritedata(Foreground1((vert% - 1) + y, sprnum(x)), 0)
                 IF y = 0 AND (vert% - 1) = -1 THEN ELSE PUT (sprpos(x), 24 + verrow(y)), spritedata(f * 80, Foreground1((vert% - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                'IF y = 0 AND (vert% - 1) = -1 THEN ELSE _PUTIMAGE (sprpos(x), 24 + verrow(y)), spritedata(Foreground2((vert% - 1) + y, sprnum(x)), 0)
                 IF y = 0 AND (vert% - 1) = -1 THEN ELSE PUT (sprpos(x), 24 + verrow(y)), spritedata(f * 80, Foreground2((vert% - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
             END IF
         NEXT x
@@ -1245,7 +1243,7 @@ DO
 
     'Quick check: did Cricket jump or fall off the screen?
     IF CKT% > 240 AND (vert% + 27) / 27 = scrcnt% THEN 'AND slidecount% = 0
-        'If he fell off the bottom screen, then that's a death.
+        'If he fell off the bottom screen, then I believe he hath kicked thine bucket, James.
         jdrop = 0 'Stop him from falling
         jump% = -1 'Reset the height counter
         IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm& 'Stop the background music (bugfix: works even when BGM is off)
@@ -1261,7 +1259,7 @@ DO
             IF LevelData(vert% + PRow, UnderFoot(cun)) = 1 THEN ssd = ssd + 1
             IF LevelData(vert% + PRow, UnderFoot(cun)) = 2 THEN ssd = ssd + 1
         NEXT cun
-        IF ssd = sn THEN slidecount% = 3: CKT% = CKT% - 4: CKB% = (CKT% + _HEIGHT(plyr&) - 1) ELSE slidecount% = 1: CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
+        IF ssd = sn THEN CKT% = CKT% - 4: CKB% = (CKT% + _HEIGHT(plyr&) - 1) ELSE slidecount% = 1: CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
         '    'DO SOMETHING, MUTTLEY!!
         'ELSE
         'IF jdrop THEN slidecount% = 1: CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
@@ -1278,31 +1276,33 @@ DO
     'NOTE: There is a bug, where monsters will sometimes not respawn, after being on-screen for at least one minute.
     'Please do NOT forget to fix this bug, somehow! Don't just leave it in, and block it off, or something else.
 
-    '** MONSTERS/BOSSES/ACTION TRIGGERS (BUG: Enemies on leftmost column disappear when player's "back is turned")
-    FOR q = 0 TO 27 'What screen row are we on? Are there monsters on that screen row, too?
-        FOR o = 0 TO (atm - 1) 'Run through each monster in memory, and check its coordinates
-            IF (vert% + q) = VAL(TrigPos(o, 2)) THEN 'Are we on the same screen row as this monster?
-                FOR p = 0 TO 41: IF sprnum(p) = VAL(TrigPos(o, 3)) THEN 'If so, what screen column is it on?
-                        IF MnS(o, 5) = 0 THEN 'If it hasn't been spawned, or just scrolled off the screen...
-                            MnS(o, 5) = 1 'Spawn or respawn it (moving off-screen "unspawns" a monster)
-                            MnS(o, 0) = p * 8
-                            MnS(o, 1) = MnS(o, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
-                            MnS(o, 3) = 24 + (q * 8)
-                            MnS(o, 2) = MnS(o, 3) - (_HEIGHT(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
+    IF NOT owld THEN
+        '** MONSTERS/BOSSES/ACTION TRIGGERS (BUG: Enemies on leftmost column disappear when player's "back is turned")
+        FOR q = 0 TO 27 'What screen row are we on? Are there monsters on that screen row, too?
+            FOR o = 0 TO (atm - 1) 'Run through each monster in memory, and check its coordinates
+                IF (vert% + q) = VAL(TrigPos(o, 2)) THEN 'Are we on the same screen row as this monster?
+                    FOR p = 0 TO 41: IF sprnum(p) = VAL(TrigPos(o, 3)) THEN 'If so, what screen column is it on?
+                            IF MnS(o, 5) = 0 THEN 'If it hasn't been spawned, or just scrolled off the screen...
+                                MnS(o, 5) = 1 'Spawn or respawn it (moving off-screen "unspawns" a monster)
+                                MnS(o, 0) = p * 8
+                                MnS(o, 1) = MnS(o, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
+                                MnS(o, 3) = 24 + (q * 8)
+                                MnS(o, 2) = MnS(o, 3) - (_HEIGHT(MonsterAnim(VAL(TrigPos(o, 0)), 0, 0)) - 1)
+                            END IF
                         END IF
-                    END IF
-                NEXT p
-            END IF
-        NEXT o
-    NEXT q
+                    NEXT p
+                END IF
+            NEXT o
+        NEXT q
 
-    FOR r = 0 TO (atm - 1) 'Place any monsters that were just spawned, or are already active, on the screen
-        IF MnS(r, 5) = 1 THEN 'Bugfix: the "invisible, slow, leftward-sweeping, monster engulfing curtain" is history.
-            IF MnS(r, 0) > MnS(r, 4) THEN MnS(r, 0) = MnS(r, 4): MnS(r, 1) = MnS(r, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)) - 1)
-            IF TrigPos(r, 1) = "R" THEN _PUTIMAGE (MnS(r, 0), MnS(r, 2) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0) ELSE _PUTIMAGE (MnS(r, 1), MnS(r, 2) - 1)-(MnS(r, 0), MnS(r, 3) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)
-            IF dh THEN DRAW "C" + STR$(&HFFFFFFFF) + " BM" + STR$(MnS(r, 1) + 6) + "," + STR$(MnS(r, 2)): Font "L" + LTRIM$(STR$(MnS(r, 0))) + " R" + LTRIM$(STR$(MnS(r, 1))) + " T" + LTRIM$(STR$(MnS(r, 2))) + " B" + LTRIM$(STR$(MnS(r, 3))) + " X" + LTRIM$(STR$(MnS(r, 4)))
-        END IF
-    NEXT r
+        FOR r = 0 TO (atm - 1) 'Place any monsters that were just spawned, or are already active, on the screen
+            IF MnS(r, 5) = 1 THEN 'Bugfix: the "invisible, slow, leftward-sweeping, monster engulfing curtain" is history.
+                IF MnS(r, 0) > MnS(r, 4) THEN MnS(r, 0) = MnS(r, 4): MnS(r, 1) = MnS(r, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)) - 1)
+                IF TrigPos(r, 1) = "R" THEN _PUTIMAGE (MnS(r, 0), MnS(r, 2) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0) ELSE _PUTIMAGE (MnS(r, 1), MnS(r, 2) - 1)-(MnS(r, 0), MnS(r, 3) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)
+                IF dh THEN DRAW "C" + STR$(&HFFFFFFFF) + " BM" + STR$(MnS(r, 1) + 6) + "," + STR$(MnS(r, 2)): Font "L" + LTRIM$(STR$(MnS(r, 0))) + " R" + LTRIM$(STR$(MnS(r, 1))) + " T" + LTRIM$(STR$(MnS(r, 2))) + " B" + LTRIM$(STR$(MnS(r, 3))) + " X" + LTRIM$(STR$(MnS(r, 4)))
+            END IF
+        NEXT r
+    END IF
 
     '** CRICKET KAMODON
     IF pf THEN 'I WAS using Knuckles the Echidna to test this, but my brother suggested someone different...
@@ -1441,48 +1441,50 @@ DO
     END IF
 
     'STEP 5: Act out the next step in each monster's AI routine (this is a work-in-progress)
-    fs = fs + 1: qp = 0: pq = 0
-    IF fs = 5 THEN 'Bugfix: all other enemies keep moving, even after one has stopped, for whatever reason
-        FOR ai = 0 TO (atm - 1) 'See the comment above the monster spawning routine for a bug that should be fixed.
-            IF MnS(ai, 5) = 1 THEN 'slidecount% = 0 AND
-                'IF MnS(ai, 4) > 0 THEN '<-- I don't think moving where this is checked broke anything...
-                IF TrigPos(ai, 1) = "L" THEN
-                    qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 4) / 8
-                    'LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq - 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq)): _DISPLAY
-                    IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
-                    IF MnS(ai, 4) MOD 8 > 3 THEN pq = pq - 1
-                    IF MnS(ai, 4) = 0 OR pq = 0 THEN 'Found the leftmost side of the map? Turn around.
-                        TrigPos(ai, 1) = "R"
-                    ELSEIF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
-                        TrigPos(ai, 1) = "R" 'Found the edge of the platform/wall? Turn around.
-                    ELSEIF LevelData(vert% + qp, pq - 1) = 2 THEN
-                        TrigPos(ai, 1) = "R" 'A wall in front of you? Turn around.
-                    ELSE 'Nothing stopping you from moving? Keep going.
-                        MnS(ai, 0) = MnS(ai, 0) - 1
-                        MnS(ai, 1) = MnS(ai, 1) - 1
-                        MnS(ai, 4) = MnS(ai, 4) - 1
+    IF NOT owld THEN
+        fs = fs + 1: qp = 0: pq = 0
+        IF fs = 5 THEN 'Bugfix: all other enemies keep moving, even after one has stopped, for whatever reason
+            FOR ai = 0 TO (atm - 1) 'See the comment above the monster spawning routine for a bug that should be fixed.
+                IF MnS(ai, 5) = 1 THEN 'slidecount% = 0 AND
+                    'IF MnS(ai, 4) > 0 THEN '<-- I don't think moving where this is checked broke anything...
+                    IF TrigPos(ai, 1) = "L" THEN
+                        qp = (MnS(ai, 3) - 32) / 8: pq = MnS(ai, 4) / 8
+                        'LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq - 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq)): _DISPLAY
+                        IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
+                        IF MnS(ai, 4) MOD 8 > 3 THEN pq = pq - 1
+                        IF MnS(ai, 4) = 0 OR pq = 0 THEN 'Found the leftmost side of the map? Turn around.
+                            TrigPos(ai, 1) = "R"
+                        ELSEIF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
+                            TrigPos(ai, 1) = "R" 'Found the edge of the platform/wall? Turn around.
+                        ELSEIF LevelData(vert% + qp, pq - 1) = 2 THEN
+                            TrigPos(ai, 1) = "R" 'A wall in front of you? Turn around.
+                        ELSE 'Nothing stopping you from moving? Keep going.
+                            MnS(ai, 0) = MnS(ai, 0) - 1
+                            MnS(ai, 1) = MnS(ai, 1) - 1
+                            MnS(ai, 4) = MnS(ai, 4) - 1
+                        END IF
+                        IF MnS(ai, 4) MOD 8 = 0 THEN g = VAL(TrigPos(ai, 3)): g = g - 1: TrigPos(ai, 3) = STR$(g)
+                    ELSEIF TrigPos(ai, 1) = "R" THEN
+                        qp = (MnS(ai, 3) - 32) / 8: pq = (MnS(ai, 4) + _WIDTH(MonsterAnim(VAL(TrigPos(ai, 0)), 0, 0))) / 8 'pq = MnS(ai, 1) / 8
+                        'LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq + 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq)): _DISPLAY
+                        IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
+                        IF (MnS(ai, 4) + _WIDTH(MonsterAnim(VAL(TrigPos(ai, 0)), 0, 0))) MOD 8 > 3 THEN pq = pq - 1
+                        IF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
+                            TrigPos(ai, 1) = "L" 'Found the edge of the platform/wall? Turn around.
+                        ELSEIF LevelData(vert% + qp, pq) = 2 THEN
+                            TrigPos(ai, 1) = "L" 'A wall in front of you? Turn around.
+                        ELSE 'Nothing stopping you from moving? Keep going.
+                            MnS(ai, 0) = MnS(ai, 0) + 1
+                            MnS(ai, 1) = MnS(ai, 1) + 1
+                            MnS(ai, 4) = MnS(ai, 4) + 1
+                        END IF
+                        IF MnS(ai, 4) MOD 8 = 0 THEN g = VAL(TrigPos(ai, 3)): g = g + 1: TrigPos(ai, 3) = STR$(g)
                     END IF
-                    IF MnS(ai, 4) MOD 8 = 0 THEN g = VAL(TrigPos(ai, 3)): g = g - 1: TrigPos(ai, 3) = STR$(g)
-                ELSEIF TrigPos(ai, 1) = "R" THEN
-                    qp = (MnS(ai, 3) - 32) / 8: pq = (MnS(ai, 4) + _WIDTH(MonsterAnim(VAL(TrigPos(ai, 0)), 0, 0))) / 8 'pq = MnS(ai, 1) / 8
-                    'LOCATE 1, 1: PRINT STR$(qp): LOCATE 2, 1: PRINT STR$(pq): LOCATE 3, 1: PRINT STR$(LevelData(vert% + qp, pq + 1)): LOCATE 4, 1: PRINT STR$(LevelData(vert% + (qp + 1), pq)): _DISPLAY
-                    IF MnS(ai, 3) MOD 8 > 3 THEN qp = qp - 1
-                    IF (MnS(ai, 4) + _WIDTH(MonsterAnim(VAL(TrigPos(ai, 0)), 0, 0))) MOD 8 > 3 THEN pq = pq - 1
-                    IF LevelData(vert% + (qp + 1), pq) < 1 OR LevelData(vert% + (qp + 1), pq) > 2 THEN
-                        TrigPos(ai, 1) = "L" 'Found the edge of the platform/wall? Turn around.
-                    ELSEIF LevelData(vert% + qp, pq) = 2 THEN
-                        TrigPos(ai, 1) = "L" 'A wall in front of you? Turn around.
-                    ELSE 'Nothing stopping you from moving? Keep going.
-                        MnS(ai, 0) = MnS(ai, 0) + 1
-                        MnS(ai, 1) = MnS(ai, 1) + 1
-                        MnS(ai, 4) = MnS(ai, 4) + 1
-                    END IF
-                    IF MnS(ai, 4) MOD 8 = 0 THEN g = VAL(TrigPos(ai, 3)): g = g + 1: TrigPos(ai, 3) = STR$(g)
                 END IF
-            END IF
-            'END IF
-        NEXT ai
-        fs = 0
+                'END IF
+            NEXT ai
+            fs = 0
+        END IF
     END IF
 
     'STEP 6: Check for player input, to decide what to do, next
@@ -1496,7 +1498,7 @@ DO
     IF kp& = MoveExit THEN 'ESC ends our fancy little simulation.
         Sector = 3: Selector = 17: GOSUB PauseGame
 
-        'Should F12+PLUS/MINUS be left in?
+        'Should F12+PLUS/MINUS be left in? I'm starting to think they should let you reposition Cricket anywhere
     ELSEIF _KEYDOWN(34304) AND kp& = MoveDScrlDn THEN 'AND slidecount% = 0 F12+PLUS scrolls the screen down 27 lines (DEBUG)
         IF vert% < ((27 * scrcnt%) - 27) THEN
             slidecount% = 216
@@ -1843,7 +1845,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveUp) THEN 'AND slidecount% = 0 THEN
         FOR hc = 0 TO (grab& / (27 * scrcnt%)) 'Or is the door in a completely different spot?
             FOR vc = 0 TO ((27 * scrcnt%) - 1) 'We'll start looking all over for it, if it is.
                 IF vc <> Vpos AND hc <> Ldoor THEN 'Skip over the door we just went into.
-                    'BUG: The check below this sometimes goes out of range, on smaller levels. (can we replicate it?)
+                    'BUG: The check below this sometimes goes out of range, on smaller levels. (...like Phringdott 2!)
                     'LOCATE 10, 1: PRINT "COL: (" + LTRIM$(STR$(hc)) + ") " + LTRIM$(STR$(LevelData(vc, hc))) + " ": LOCATE 11, 1: PRINT "ROW: (" + LTRIM$(STR$(vc)) + ")": _DISPLAY
                     IF LevelData(vc, hc) = LevelData(Vpos, Ldoor) AND LevelData(vc, hc + 1) = LevelData(Vpos, Rdoor) THEN
                         ovp = vc: ohp = hc: odp = 1
@@ -2047,7 +2049,7 @@ ELSEIF jdrop THEN 'If you let off the JUMP key
     CKT% = CKT% + 1 '   This brings the player sprite back down to the
     CKB% = CKB% + 1 '   platform it was on, one pixel at a time.
 
-ELSEIF kp& = MoveAttack THEN 'Pressing the ATTACK key by itself
+ELSEIF kp& = MoveAttack AND NOT owld THEN 'Pressing the ATTACK key by itself
     'This starts the attack animation sequence, saves the pose we were in, and what our coordinates were
     IF atk = -1 THEN atk = 0: last& = plyr&: fr = CKR%
     'I wonder if I should make it so you can hold down the attack key?
@@ -2086,7 +2088,7 @@ ELSEIF atk > -1 THEN
         IF smk THEN _SNDPLAY SEF(4) ELSE _SNDPLAY SEF(17)
     END IF
     IF atk = 6 THEN atk = -1: plyr& = last&: CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: fr = 0: smk = 0
-    'END IF
+    'END IF 'On the overworld map, pressing the ATTACK button will instead cause Cricket to enter a level
 
 END IF
 RETURN
@@ -2266,7 +2268,7 @@ IF jdrop THEN 'If you let off the JUMP button/thumbstick
     CKB% = CKB% + 1 '   platform it was on, one pixel at a time.
 END IF
 
-IF atk > -1 THEN 'If you pressed the ATTACK button/thumbstick while standing still
+IF atk > -1 THEN 'If you pressed the ATTACK button/thumbstick while standing still (import the keyboard's routine!)
     IF atk < 6 THEN plyr& = CrickAtk(atk): CKT% = CKB% - _HEIGHT(CrickAtk(atk)): CKR% = CKL% + _WIDTH(CrickAtk(atk)) - 1
     aa = aa + 1
     IF aa = 10 THEN aa = 0: atk = atk + 1 'Changing "aa = 10" speeds up, or slows down, the attacking animation.
@@ -2813,7 +2815,7 @@ IF Ldoor > 0 AND Rdoor > 0 THEN 'If you're actually standing in front of a door
     FOR hc = 0 TO (grab& / (27 * scrcnt%)) 'Or is the door in a completely different spot?
         FOR vc = 0 TO ((27 * scrcnt%) - 1) 'We'll start looking all over for it, if it is.
             IF vc <> Vpos AND hc <> Ldoor THEN 'Skip over the door we just went into.
-                'BUG: The check below this sometimes goes out of range, on smaller levels. (can we replicate it?)
+                'BUG: The check below this sometimes goes out of range, on smaller levels. (Phringdott 2, for example)
                 'LOCATE 10, 1: PRINT "COL: (" + LTRIM$(STR$(hc)) + ") " + LTRIM$(STR$(LevelData(vc, hc))) + " ": LOCATE 11, 1: PRINT "ROW: (" + LTRIM$(STR$(vc)) + ")": _DISPLAY
                 IF LevelData(vc, hc) = LevelData(Vpos, Ldoor) AND LevelData(vc, hc + 1) = LevelData(Vpos, Rdoor) THEN
                     ovp = vc: ohp = hc: odp = 1
@@ -3524,17 +3526,15 @@ DRAW "B M107,55"
 Font "2014 FOR SURE!!!"
 DRAW "B M250,55"
 Font "NOV 23 2013"
-DRAW "B M133,90"
+DRAW "B M133,95"
 Font "START"
-DRAW "B M122,100 C" + STR$(&HFF333333)
+DRAW "B M122,105 C" + STR$(&HFF333333)
 Font "CONTINUE"
-DRAW "B M136,110 C" + STR$(&HFF333333)
-Font "SAVE"
-DRAW "B M126,120 C" + STR$(&HFFFFFFFF)
+DRAW "B M126,115 C" + STR$(&HFFFFFFFF)
 Font "OPTIONS"
-DRAW "B M111,130 C" + STR$(&HFF333333)
+DRAW "B M111,125 C" + STR$(&HFF333333)
 Font "LEADERBOARD"
-DRAW "B M107,145 C" + STR$(&HFFFFFFFF)
+DRAW "B M107,140 C" + STR$(&HFFFFFFFF)
 Font "EXIT THE DEMO"
 DRAW "B M25,188 C" + STR$(&HFFFFFFFF)
 Font "UP AND DOWN MOVES, ENTER SELECTS, ESC EXITS"
@@ -3557,17 +3557,17 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         'IF FlashColor THEN LET FlashColor = 0 ELSE LET FlashColor = 1
 
         IF Quadrant = 0 THEN 'The main menu.
-            DRAW "C" + STR$(&HFFFFFFFF) + " BM133,90": Font "START"
-            DRAW "C" + STR$(&HFF333333) + " BM122,100": Font "CONTINUE"
-            DRAW "C" + STR$(&HFF333333) + " BM136,110": Font "SAVE" '<-- What should I change this option to?
-            DRAW "C" + STR$(&HFFFFFFFF) + " BM126,120": Font "OPTIONS"
-            DRAW "C" + STR$(&HFF333333) + " BM111,130": Font "LEADERBOARD"
-            DRAW "C" + STR$(&HFFFFFFFF) + " BM107,145": Font "EXIT THE DEMO"
+            DRAW "C" + STR$(&HFFFFFFFF) + " BM133,95": Font "START"
+            DRAW "C" + STR$(&HFF333333) + " BM122,105": Font "CONTINUE"
+            DRAW "C" + STR$(&HFFFFFFFF) + " BM126,115": Font "OPTIONS"
+            DRAW "C" + STR$(&HFF333333) + " BM111,125": Font "LEADERBOARD"
+            DRAW "C" + STR$(&HFFFFFFFF) + " BM107,140": Font "EXIT THE DEMO"
         ELSEIF Quadrant = 1 THEN 'The options in the "Start" (new game) menu.
-            DRAW "C" + STR$(&HFFFFFFFF) + " BM80,85": Font "START FROM WHICH LEVEL?"
-            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 1", 110
-            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 2", 120
-            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 3", 130
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "START FROM WHICH LEVEL?", 85 'BM80,85
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "OVERWORLD MAP", 110
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "SUBCON 1", 120
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 2", 130
+            DRAW "C" + STR$(&HFFFFFFFF): CenterFont "PHRINGDOTT 3", 140
         ELSEIF Quadrant = 2 THEN 'The options in the "Options" menu.
             DRAW "C" + STR$(&HFFFFFFFF) + " BM126,65": Font "OPTIONS"
             DRAW "C" + STR$(&HFFFFFFFF) + " BM1,75": Font "WEAPON OF CHOICE"
@@ -3592,31 +3592,32 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         END IF
 
         'First row is the main menu.
-        IF Highlight = 1 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM133,90": Font "START"
+        IF Highlight = 1 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM133,95": Font "START"
         'Initially skipping "CONTINUE", but "SAVE" should be changed, because you can't save from the main menu.
-        IF Highlight = 2 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM126,120": Font "OPTIONS"
+        IF Highlight = 2 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM126,115": Font "OPTIONS"
         '...and "LEADERBOARD", since that'll be another full game feature
-        IF Highlight = 3 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM107,145": Font "EXIT THE DEMO"
+        IF Highlight = 3 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM107,140": Font "EXIT THE DEMO"
         'Second row is the options in the "Start" (new game) menu. I might replace this with an overworld map.
-        IF Highlight = 4 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 1", 110
-        IF Highlight = 5 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 2", 120
-        IF Highlight = 6 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 3", 130
+        IF Highlight = 4 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "OVERWORLD MAP", 110
+        IF Highlight = 5 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "SUBCON 1", 120
+        IF Highlight = 6 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 2", 130
+        IF Highlight = 7 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))): CenterFont "PHRINGDOTT 3", 140
         'Third row is the options in the "Options" menu.
-        IF Highlight = 7 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,75": Font "WEAPON OF CHOICE"
-        IF Highlight = 8 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,85": Font "RECONFIGURE CONTROLS"
-        IF Highlight = 9 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,115": Font "BACKGROUND MUSIC"
-        IF Highlight = 10 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,125": Font "SOUND TEST"
-        IF Highlight = 11 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,135": Font "MUSIC TEST"
+        IF Highlight = 8 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,75": Font "WEAPON OF CHOICE"
+        IF Highlight = 9 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,85": Font "RECONFIGURE CONTROLS"
+        IF Highlight = 10 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,115": Font "BACKGROUND MUSIC"
+        IF Highlight = 11 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,125": Font "SOUND TEST"
+        IF Highlight = 12 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,135": Font "MUSIC TEST"
         'Fourth row is the options in the "Configure Controls" menu.
-        IF Highlight = 12 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,80": Font "CONTROL SCHEME PRESET"
-        IF Highlight = 13 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,95": Font "UP"
-        IF Highlight = 14 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,105": Font "DOWN"
-        IF Highlight = 15 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,115": Font "LEFT"
-        IF Highlight = 16 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,125": Font "RIGHT"
-        IF Highlight = 17 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,135": Font "RUN"
-        IF Highlight = 18 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,145": Font "JUMP"
-        IF Highlight = 19 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,155": Font "ATTACK"
-        IF Highlight = 20 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,165": Font "PAUSE"
+        IF Highlight = 13 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,80": Font "CONTROL SCHEME PRESET"
+        IF Highlight = 14 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,95": Font "UP"
+        IF Highlight = 15 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,105": Font "DOWN"
+        IF Highlight = 16 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,115": Font "LEFT"
+        IF Highlight = 17 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,125": Font "RIGHT"
+        IF Highlight = 18 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,135": Font "RUN"
+        IF Highlight = 19 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,145": Font "JUMP"
+        IF Highlight = 20 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,155": Font "ATTACK"
+        IF Highlight = 21 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (FlashColor * 15))) + " BM1,165": Font "PAUSE"
         'Fifth row is the list of sound effects from the "Sound Test".
 
         LET TimeIsNow! = TIMER
@@ -3628,15 +3629,15 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         CASE 18432 ' Up arrow
             Highlight = Highlight - 1
             IF Quadrant = 0 THEN IF Highlight = 0 THEN Highlight = 3
-            IF Quadrant = 1 THEN IF Highlight = 3 THEN Highlight = 6
-            IF Quadrant = 2 THEN IF Highlight = 6 THEN Highlight = 11
-            IF Quadrant = 3 THEN IF Highlight = 11 THEN Highlight = 20
+            IF Quadrant = 1 THEN IF Highlight = 3 THEN Highlight = 7
+            IF Quadrant = 2 THEN IF Highlight = 7 THEN Highlight = 12
+            IF Quadrant = 3 THEN IF Highlight = 12 THEN Highlight = 21
         CASE 20480 ' Down arrow
             Highlight = Highlight + 1
             IF Quadrant = 0 THEN IF Highlight = 4 THEN Highlight = 1
-            IF Quadrant = 1 THEN IF Highlight = 7 THEN Highlight = 4
-            IF Quadrant = 2 THEN IF Highlight = 12 THEN Highlight = 7
-            IF Quadrant = 3 THEN IF Highlight = 21 THEN Highlight = 12
+            IF Quadrant = 1 THEN IF Highlight = 8 THEN Highlight = 4
+            IF Quadrant = 2 THEN IF Highlight = 13 THEN Highlight = 8
+            IF Quadrant = 3 THEN IF Highlight = 22 THEN Highlight = 13
         CASE 13 ' ENTER
             SELECT CASE Highlight 'A tiny bit of code optimization, here.
                 CASE 1 'Main Menu > Start
@@ -3664,13 +3665,60 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     DRAW "B M21,188 C" + STR$(&HFFFFFFFF)
                     Font "UP AND DOWN MOVES, ENTER TOGGLES, ESC EXITS"
                     Quadrant = 2
-                    Highlight = 7
+                    Highlight = 8
                 CASE 3 'Main Menu > Exit the Demo
                     _SNDPLAY SEF(4)
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
                     _FULLSCREEN _OFF 'Go back to windowed mode (if it's not)
                     SYSTEM 'Exit the demo
-                CASE 4 'Start > Subcon 1 (soon to be replaced with Phringdott 1, when I get to a playable alpha)
+                CASE 4 'Start > Overworld Map (for testing purposes; later builds will just skip straight to this)
+                    _SNDPLAY SEF(4)
+                    IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
+                    zone$ = "PHRINGDOTT" 'Later, the overworld map's level data file will supply this.
+                    LevelData$ = respath$ + "WLDXOWLD.KMD"
+                    Foreground1$ = respath$ + "WLDXOWF1.KMD"
+                    Foreground2$ = respath$ + "WLDXOWF2.KMD"
+                    Background1$ = respath$ + "WLDXOWB1.KMD"
+                    Background2$ = respath$ + "WLDXOWB2.KMD"
+                    ActionDef$ = respath$ + "WLDXOWAD.KMD" '  If any overworld map uses these, they should be set to
+                    ActionTable$ = respath$ + "WLDXOWAT.KMD" 'define normal and bonus level entrances, and triggers.
+                    OPEN LevelData$ FOR INPUT AS #5
+                    OPEN Foreground1$ FOR INPUT AS #1
+                    OPEN Foreground2$ FOR INPUT AS #2
+                    OPEN Background1$ FOR INPUT AS #3
+                    OPEN Background2$ FOR INPUT AS #4
+                    'Quick check, to see how many songs should be loaded
+                    FOR x = 0 TO 5 'Skip over the first six settings
+                        INPUT #5, stuff$
+                    NEXT x
+                    msn = 0
+                    DO 'Then, see how many lines after that, mention songs.
+                        INPUT #5, song$
+                        IF LEN(song$) > 3 THEN msn = msn + 1 ELSE EXIT DO
+                    LOOP
+                    CLOSE #5: OPEN LevelData$ FOR INPUT AS #5
+                    'Now we read the level data, for real!
+                    INPUT #5, lvname$ 'The name of the level
+                    INPUT #5, clock$ 'How high to set the clock
+                    INPUT #5, scrnum$ 'How high can we scroll vertically?
+                    INPUT #5, stpos$ 'On what screen level do we start?
+                    INPUT #5, startx$ 'Then the X and Y coordinates of where
+                    INPUT #5, starty$ 'Cricket should be placed, at the start.
+                    'Then, a little bit of string to integer conversion...
+                    tick = VAL(clock$) 'Set the clock
+                    scrcnt% = VAL(scrnum$) 'Set the max number of screens
+                    vert% = VAL(stpos$) 'Set the starting screen
+                    CKL% = VAL(startx$) 'Set Cricket's starting X coordinate
+                    CKT% = VAL(starty$) 'Set Cricket's starting Y coordinate
+                    IF actbgm% >= 0 AND bgm& THEN _SNDCLOSE bgm&
+                    FOR sf = 0 TO (msn - 1) 'Get each song filename.
+                        INPUT #5, sf$ 'This way, the file is positioned at the level data, where we need it.
+                        BGM(sf) = respath$ + bgmfldr$ + sf$ 'Should all music be loaded from the MUSIC folder?
+                    NEXT sf
+                    IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
+                    owld = 1 'Tells the game engine this is the overworld map, and to not load the action table (yet)
+                    EXIT DO
+                CASE 5 'Start > Subcon 1 (soon to be replaced with Phringdott 1, when I get to a playable alpha)
                     _SNDPLAY SEF(4)
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
                     zone$ = "SUBCON 1" 'Zone code
@@ -3732,8 +3780,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         BGM(sf) = sf$ 'the level data, where we need it.
                     NEXT sf 'TODO: Add "respath$ + bgmfldr$ + " to the front of each entry.
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
+                    owld = 0 'This is not the overworld map, so the game engine should read the action table
                     EXIT DO
-                CASE 5 'Start > Phringdott 2 (another possible level idea; I'll probably keep this one here)
+                CASE 6 'Start > Phringdott 2 (another possible level idea; I'll probably keep this one here)
                     _SNDPLAY SEF(4)
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
                     zone$ = "PHRINGDOTT 2"
@@ -3778,8 +3827,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         BGM(sf) = respath$ + bgmfldr$ + sf$ 'Should all music be loaded from the MUSIC folder?
                     NEXT sf
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
+                    owld = 1 'This is not the overworld map, but since this level has no monsters, now I can test it!
                     EXIT DO
-                CASE 6 'Start > Phringdott 3 (I have an idea for a level, that will either be here, or Phringdott 4)
+                CASE 7 'Start > Phringdott 3 (I have an idea for a level, that will either be here, or Phringdott 4)
                     _SNDPLAY SEF(4)
                     zone$ = "PHRINGDOTT 3"
                     IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
@@ -3841,8 +3891,9 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         BGM(sf) = respath$ + bgmfldr$ + sf$ 'Should all music be loaded from the MUSIC folder?
                     NEXT sf
                     IF actbgm% >= 0 THEN bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE") ELSE prevbgm% = 0
+                    owld = 0 'This is not the overworld map, so the game engine should read the action table
                     EXIT DO
-                CASE 7 'Options > Weapon of Choice (select controller)
+                CASE 8 'Options > Weapon of Choice (select controller)
                     'I'm thinking I should probably integrate all of the controller options into their own submenu.
                     _SNDPLAY SEF(8)
                     LINE (155, 75)-(319, 66), _RGBA32(0, 0, 0, 255), BF
@@ -3867,7 +3918,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         MovePause = DefKeys(cont%, pn, 0, 7): ActionPause = DefKeys(cont%, pn, 1, 7)
                         FOR kn = 0 TO 7: JoyMoveOp(kn) = DefKeys(cont%, pn, 2, kn): NEXT kn
                     END IF
-                CASE 8 'Options > Reconfigure Controls
+                CASE 9 'Options > Reconfigure Controls
                     _SNDPLAY SEF(4)
                     LINE (0, 59)-(320, 188), _RGBA32(0, 0, 0, 255), BF 'Erase the menu options.
                     DRAW "B M155,80 C" + STR$(&HFF00FF00)
@@ -3891,8 +3942,8 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     DRAW "C" + STR$(&HFFFFFFFF) 'Originally at 18,188
                     CenterFont "ARROW KEYS MOVE, ENTER TOGGLES, ESC BACKS OUT", 188
                     Quadrant = 3
-                    Highlight = 12
-                CASE 9 'Options > Background Music (no "ambience" option yet)
+                    Highlight = 13
+                CASE 10 'Options > Background Music (no "ambience" option yet)
                     _SNDPLAY SEF(8)
                     LINE (155, 118)-(250, 109), _RGBA32(0, 0, 0, 255), BF
                     DRAW "B M155,115"
@@ -3909,7 +3960,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                         bgm& = _SNDOPEN(BGM(0), "VOL,PAUSE")
                         _SNDLOOP bgm&
                     END IF
-                CASE 10 'Options > Sound Test ... should I rewrite this part, or integrate it into myCrick?
+                CASE 11 'Options > Sound Test ... should I rewrite this part, or integrate it into myCrick?
                     _SNDPLAY SEF(4)
                     IF actbgm% >= 0 AND bgm& THEN _SNDPAUSE bgm& 'Better spot.
                     LINE (0, 59)-(320, 188), _RGBA32(0, 0, 0, 255), BF 'Erase the menu options.
@@ -3940,11 +3991,11 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     DRAW "B M18,188"
                     Font "UP AND DOWN MOVES, ENTER PLAYS, ESC BACKS OUT"
                     Quadrant = 4
-                CASE 11 'Options > Music Test
+                CASE 12 'Options > Music Test
                     _SNDPLAY SEF(4)
                     THAT = 0
                     'This should call a subcommand that'll bring up "myCrick"
-                CASE 12 'Options > Reconfigure Controls > Control Scheme Preset
+                CASE 13 'Options > Reconfigure Controls > Control Scheme Preset
                     _SNDPLAY SEF(8)
                     LINE (155, 80)-(319, 71), _RGBA32(0, 0, 0, 255), BF 'Erase the preset name, since it's changing
                     pn = pn + 1
@@ -3984,7 +4035,6 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                     IF cont% = 0 THEN Font ButtonDef$(MoveAttack) ELSE Font GamepadDef$(6)
                     DRAW "B M50,165 C" + STR$(&HFF00FF00)
                     IF cont% = 0 THEN Font ButtonDef$(MovePause) ELSE Font GamepadDef$(7)
-                CASE 13: GOSUB Remap
                 CASE 14: GOSUB Remap
                 CASE 15: GOSUB Remap
                 CASE 16: GOSUB Remap
@@ -3992,6 +4042,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                 CASE 18: GOSUB Remap
                 CASE 19: GOSUB Remap
                 CASE 20: GOSUB Remap
+                CASE 21: GOSUB Remap
             END SELECT
         CASE 27 'ESC
             IF Quadrant = 0 THEN 'Main menu
@@ -4023,7 +4074,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                 DRAW "B M21,188 C" + STR$(&HFFFFFFFF)
                 Font "UP AND DOWN MOVES, ENTER TOGGLES, ESC EXITS"
                 Quadrant = 2
-                Highlight = 8
+                Highlight = 9
             ELSEIF Quadrant = 1 OR 2 THEN 'Start (new game) and Options menus
                 _SNDPLAY SEF(1) 'For lack of a better "back up" sound... xD
                 IF actbgm% >= 0 THEN IF _SNDPAUSED(bgm&) THEN _SNDPLAY bgm&
@@ -4039,8 +4090,8 @@ LOOP
 EXIT SUB
 
 Remap: 'SELECT CASE wouldn't cooperate with me, so I just moved the key remapping into a subroutine.
-LINE (50, (78 + ((Highlight - 12) * 10)))-(320, (86 + ((Highlight - 12) * 10))), _RGBA32(0, 0, 0, 255), BF
-DRAW "B M50, " + STR$(85 + ((Highlight - 12) * 10)) + " C" + STR$(&HFF009900)
+LINE (50, (78 + ((Highlight - 13) * 10)))-(320, (86 + ((Highlight - 13) * 10))), _RGBA32(0, 0, 0, 255), BF
+DRAW "B M50, " + STR$(85 + ((Highlight - 13) * 10)) + " C" + STR$(&HFF009900)
 IF cont% = 0 THEN Font "PRESS THE NEW KEY, OR ESC TO CANCEL" ELSE Font "PRESS BUTTON, THUMBSTICK, OR ESC TO CANCEL"
 _DISPLAY
 _SNDPLAY SEF(8)
@@ -4049,18 +4100,18 @@ IF cont% = 0 THEN
     DO: kg& = _KEYHIT: LOOP WHILE kg& <= 0 'Only capture a positive keycode.
     IF kg& = 27 THEN 'If the player pressed ESC...
         _SNDPLAY SEF(1)
-        LINE (50, (78 + ((Highlight - 12) * 10)))-(320, (86 + ((Highlight - 12) * 10))), _RGBA32(0, 0, 0, 255), BF
+        LINE (50, (78 + ((Highlight - 13) * 10)))-(320, (86 + ((Highlight - 13) * 10))), _RGBA32(0, 0, 0, 255), BF
     ELSE 'Or if the player actually pressed a different key...
         _SNDPLAY SEF(4)
-        LINE (50, (78 + ((Highlight - 12) * 10)))-(320, (86 + ((Highlight - 12) * 10))), _RGBA32(0, 0, 0, 255), BF
-        IF Highlight = 13 THEN MoveUp = kg&
-        IF Highlight = 14 THEN MoveDown = kg&
-        IF Highlight = 15 THEN MoveLeft = kg&
-        IF Highlight = 16 THEN MoveRight = kg&
-        IF Highlight = 17 THEN MoveRun = kg&
-        IF Highlight = 18 THEN MoveJump = kg&
-        IF Highlight = 19 THEN MoveAttack = kg&
-        IF Highlight = 20 THEN MovePause = kg&
+        LINE (50, (78 + ((Highlight - 13) * 10)))-(320, (86 + ((Highlight - 13) * 10))), _RGBA32(0, 0, 0, 255), BF
+        IF Highlight = 14 THEN MoveUp = kg&
+        IF Highlight = 15 THEN MoveDown = kg&
+        IF Highlight = 16 THEN MoveLeft = kg&
+        IF Highlight = 17 THEN MoveRight = kg&
+        IF Highlight = 18 THEN MoveRun = kg&
+        IF Highlight = 19 THEN MoveJump = kg&
+        IF Highlight = 20 THEN MoveAttack = kg&
+        IF Highlight = 21 THEN MovePause = kg&
     END IF
 ELSEIF cont% > 0 THEN
     sax = 0: say = 0: sbx = 0: sby = 0: dpx = 0: dpy = 0
@@ -4082,15 +4133,15 @@ ELSEIF cont% > 0 THEN
         IF dpy > 249 OR dpy < 6 THEN EXIT DO
         IF cont% MOD 2 = 0 THEN bp = STRIG((cb * 4) + 3, cont%) ELSE bp = STRIG((cb * 4) + 1, cont%)
         IF bp THEN
-            IF cont% MOD 2 = 0 THEN bn = ((cb * 4) + 3): JoyMoveOp(Highlight - 13) = 0: EXIT DO
-            IF cont% MOD 2 = 1 THEN bn = ((cb * 4) + 1): JoyMoveOp(Highlight - 13) = 0: EXIT DO
+            IF cont% MOD 2 = 0 THEN bn = ((cb * 4) + 3): JoyMoveOp(Highlight - 14) = 0: EXIT DO
+            IF cont% MOD 2 = 1 THEN bn = ((cb * 4) + 1): JoyMoveOp(Highlight - 14) = 0: EXIT DO
         END IF
         IF bn = 0 THEN cb = cb + 1: IF cb = 30 THEN cb = 0
         bp = 0: bn = 0
     LOOP 'Unconditional loop; pressing a gamepad button or thumbstick, or pressing ESC on the keyboard, will end this
     IF km& <> 27 THEN _SNDPLAY SEF(4)
-    LINE (50, (78 + ((Highlight - 12) * 10)))-(320, (86 + ((Highlight - 12) * 10))), _RGBA32(0, 0, 0, 255), BF
-    IF Highlight = 13 THEN
+    LINE (50, (78 + ((Highlight - 13) * 10)))-(320, (86 + ((Highlight - 13) * 10))), _RGBA32(0, 0, 0, 255), BF
+    IF Highlight = 14 THEN
         IF sax > 249 OR sax < 6 THEN MoveUp = sax: ActionUp = (xc - 2): JoyMoveOp(0) = 1
         IF say > 249 OR say < 6 THEN MoveUp = say: ActionUp = (xc - 1): JoyMoveOp(0) = 1
         IF sbx > 249 OR sbx < 6 THEN MoveUp = sbx: ActionUp = (xc - 2): JoyMoveOp(0) = 2
@@ -4098,7 +4149,7 @@ ELSEIF cont% > 0 THEN
         IF dpx > 249 OR dpx < 6 THEN MoveUp = dpx: ActionUp = (xc - 2): JoyMoveOp(0) = 3
         IF dpy > 249 OR dpy < 6 THEN MoveUp = dpy: ActionUp = (xc - 1): JoyMoveOp(0) = 3
         IF bn > 0 THEN MoveUp = bn: ActionUp = cont%
-    ELSEIF Highlight = 14 THEN
+    ELSEIF Highlight = 15 THEN
         IF sax > 249 OR sax < 6 THEN MoveDown = sax: ActionDown = (xc - 2): JoyMoveOp(1) = 1
         IF say > 249 OR say < 6 THEN MoveDown = say: ActionDown = (xc - 1): JoyMoveOp(1) = 1
         IF sbx > 249 OR sbx < 6 THEN MoveDown = sbx: ActionDown = (xc - 2): JoyMoveOp(1) = 2
@@ -4106,7 +4157,7 @@ ELSEIF cont% > 0 THEN
         IF dpx > 249 OR dpx < 6 THEN MoveDown = dpx: ActionDown = (xc - 2): JoyMoveOp(1) = 3
         IF dpy > 249 OR dpy < 6 THEN MoveDown = dpy: ActionDown = (xc - 1): JoyMoveOp(1) = 3
         IF bn > 0 THEN MoveDown = bn: ActionDown = cont%
-    ELSEIF Highlight = 15 THEN
+    ELSEIF Highlight = 16 THEN
         IF sax > 249 OR sax < 6 THEN MoveLeft = sax: ActionLeft = (xc - 2): JoyMoveOp(2) = 1
         IF say > 249 OR say < 6 THEN MoveLeft = say: ActionLeft = (xc - 1): JoyMoveOp(2) = 1
         IF sbx > 249 OR sbx < 6 THEN MoveLeft = sbx: ActionLeft = (xc - 2): JoyMoveOp(2) = 2
@@ -4114,7 +4165,7 @@ ELSEIF cont% > 0 THEN
         IF dpx > 249 OR dpx < 6 THEN MoveLeft = dpx: ActionLeft = (xc - 2): JoyMoveOp(2) = 3
         IF dpy > 249 OR dpy < 6 THEN MoveLeft = dpy: ActionLeft = (xc - 1): JoyMoveOp(2) = 3
         IF bn > 0 THEN MoveLeft = bn: ActionLeft = cont%
-    ELSEIF Highlight = 16 THEN
+    ELSEIF Highlight = 17 THEN
         IF sax > 249 OR sax < 6 THEN MoveRight = sax: ActionRight = (xc - 2): JoyMoveOp(3) = 1
         IF say > 249 OR say < 6 THEN MoveRight = say: ActionRight = (xc - 1): JoyMoveOp(3) = 1
         IF sbx > 249 OR sbx < 6 THEN MoveRight = sbx: ActionRight = (xc - 2): JoyMoveOp(3) = 2
@@ -4122,7 +4173,7 @@ ELSEIF cont% > 0 THEN
         IF dpx > 249 OR dpx < 6 THEN MoveRight = dpx: ActionRight = (xc - 2): JoyMoveOp(3) = 3
         IF dpy > 249 OR dpy < 6 THEN MoveRight = dpy: ActionRight = (xc - 1): JoyMoveOp(3) = 3
         IF bn > 0 THEN MoveRight = bn: ActionRight = cont%
-    ELSEIF Highlight = 17 THEN
+    ELSEIF Highlight = 18 THEN
         IF sax > 249 OR sax < 6 THEN MoveRun = sax: ActionRun = (xc - 2): JoyMoveOp(4) = 1
         IF say > 249 OR say < 6 THEN MoveRun = say: ActionRun = (xc - 1): JoyMoveOp(4) = 1
         IF sbx > 249 OR sbx < 6 THEN MoveRun = sbx: ActionRun = (xc - 2): JoyMoveOp(4) = 2
@@ -4130,7 +4181,7 @@ ELSEIF cont% > 0 THEN
         IF dpx > 249 OR dpx < 6 THEN MoveRun = dpx: ActionRun = (xc - 2): JoyMoveOp(4) = 3
         IF dpy > 249 OR dpy < 6 THEN MoveRun = dpy: ActionRun = (xc - 1): JoyMoveOp(4) = 3
         IF bn > 0 THEN MoveRun = bn: ActionRun = cont%
-    ELSEIF Highlight = 18 THEN
+    ELSEIF Highlight = 19 THEN
         IF sax > 249 OR sax < 6 THEN MoveJump = sax: ActionJump = (xc - 2): JoyMoveOp(5) = 1
         IF say > 249 OR say < 6 THEN MoveJump = say: ActionJump = (xc - 1): JoyMoveOp(5) = 1
         IF sbx > 249 OR sbx < 6 THEN MoveJump = sbx: ActionJump = (xc - 2): JoyMoveOp(5) = 2
@@ -4138,7 +4189,7 @@ ELSEIF cont% > 0 THEN
         IF dpx > 249 OR dpx < 6 THEN MoveJump = dpx: ActionJump = (xc - 2): JoyMoveOp(5) = 3
         IF dpy > 249 OR dpy < 6 THEN MoveJump = dpy: ActionJump = (xc - 1): JoyMoveOp(5) = 3
         IF bn > 0 THEN MoveJump = bn: ActionJump = cont%
-    ELSEIF Highlight = 19 THEN
+    ELSEIF Highlight = 20 THEN
         IF sax > 249 OR sax < 6 THEN MoveAttack = sax: ActionAttack = (xc - 2): JoyMoveOp(6) = 1
         IF say > 249 OR say < 6 THEN MoveAttack = say: ActionAttack = (xc - 1): JoyMoveOp(6) = 1
         IF sbx > 249 OR sbx < 6 THEN MoveAttack = sbx: ActionAttack = (xc - 2): JoyMoveOp(6) = 2
@@ -4146,7 +4197,7 @@ ELSEIF cont% > 0 THEN
         IF dpx > 249 OR dpx < 6 THEN MoveAttack = dpx: ActionAttack = (xc - 2): JoyMoveOp(6) = 3
         IF dpy > 249 OR dpy < 6 THEN MoveAttack = dpy: ActionAttack = (xc - 1): JoyMoveOp(6) = 3
         IF bn > 0 THEN MoveAttack = bn: ActionAttack = cont%
-    ELSEIF Highlight = 20 THEN
+    ELSEIF Highlight = 21 THEN
         IF sax > 249 OR sax < 6 THEN MovePause = sax: ActionPause = (xc - 2): JoyMoveOp(7) = 1
         IF say > 249 OR say < 6 THEN MovePause = say: ActionPause = (xc - 1): JoyMoveOp(7) = 1
         IF sbx > 249 OR sbx < 6 THEN MovePause = sbx: ActionPause = (xc - 2): JoyMoveOp(7) = 2
@@ -4156,25 +4207,25 @@ ELSEIF cont% > 0 THEN
         IF bn > 0 THEN MovePause = bn: ActionPause = cont%
     END IF
 END IF
-DRAW "B M50, " + STR$(85 + ((Highlight - 12) * 10)) + " C" + STR$(&HFF00FF00)
+DRAW "B M50, " + STR$(85 + ((Highlight - 13) * 10)) + " C" + STR$(&HFF00FF00)
 IF cont% = 0 THEN
-    IF Highlight = 13 THEN Font ButtonDef$(MoveUp)
-    IF Highlight = 14 THEN Font ButtonDef$(MoveDown)
-    IF Highlight = 15 THEN Font ButtonDef$(MoveLeft)
-    IF Highlight = 16 THEN Font ButtonDef$(MoveRight)
-    IF Highlight = 17 THEN Font ButtonDef$(MoveRun)
-    IF Highlight = 18 THEN Font ButtonDef$(MoveJump)
-    IF Highlight = 19 THEN Font ButtonDef$(MoveAttack)
-    IF Highlight = 20 THEN Font ButtonDef$(MovePause)
+    IF Highlight = 14 THEN Font ButtonDef$(MoveUp)
+    IF Highlight = 15 THEN Font ButtonDef$(MoveDown)
+    IF Highlight = 16 THEN Font ButtonDef$(MoveLeft)
+    IF Highlight = 17 THEN Font ButtonDef$(MoveRight)
+    IF Highlight = 18 THEN Font ButtonDef$(MoveRun)
+    IF Highlight = 19 THEN Font ButtonDef$(MoveJump)
+    IF Highlight = 20 THEN Font ButtonDef$(MoveAttack)
+    IF Highlight = 21 THEN Font ButtonDef$(MovePause)
 ELSEIF cont% > 0 THEN
-    IF Highlight = 13 THEN Font GamepadDef$(0)
-    IF Highlight = 14 THEN Font GamepadDef$(1)
-    IF Highlight = 15 THEN Font GamepadDef$(2)
-    IF Highlight = 16 THEN Font GamepadDef$(3)
-    IF Highlight = 17 THEN Font GamepadDef$(4)
-    IF Highlight = 18 THEN Font GamepadDef$(5)
-    IF Highlight = 19 THEN Font GamepadDef$(6)
-    IF Highlight = 20 THEN Font GamepadDef$(7)
+    IF Highlight = 14 THEN Font GamepadDef$(0)
+    IF Highlight = 15 THEN Font GamepadDef$(1)
+    IF Highlight = 16 THEN Font GamepadDef$(2)
+    IF Highlight = 17 THEN Font GamepadDef$(3)
+    IF Highlight = 18 THEN Font GamepadDef$(4)
+    IF Highlight = 19 THEN Font GamepadDef$(5)
+    IF Highlight = 20 THEN Font GamepadDef$(6)
+    IF Highlight = 21 THEN Font GamepadDef$(7)
 END IF
 RETURN
 
