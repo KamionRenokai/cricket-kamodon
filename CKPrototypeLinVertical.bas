@@ -191,7 +191,7 @@ PRINT
 PRINT "Sound, music and basic stuff? ";
 
 tilecnt% = 0
-respath$ = "/media/Lexar/PROJECTS/CRICKET/" '<-- Remember to EDIT anything using this, before "leaking" dev builds.
+respath$ = "/media/piccolo/USB DISK/PROJECTS/CricketKamodon/" '<-- Edit any code using this variable before you "leak"
 sprfldr$ = "SPRITES/" '        General sprites folder
 chrfldr$ = "SPRITES/PLAYER/" ' Player character sprites (walking/attacking/jumping animations, for example)
 monfldr$ = "SPRITES/ENEMY/" '  Enemy sprites, whether random monsters, or bosses
@@ -1243,7 +1243,7 @@ DO
 
     'Quick check: did Cricket jump or fall off the screen?
     IF CKT% > 240 AND (vert% + 27) / 27 = scrcnt% THEN 'AND slidecount% = 0
-        'If he fell off the bottom screen, then I believe he hath kicked thine bucket, James.
+        'If he fell off the bottom screen, then I believe his foot hath propelled the pail, James.
         jdrop = 0 'Stop him from falling
         jump% = -1 'Reset the height counter
         IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm& 'Stop the background music (bugfix: works even when BGM is off)
@@ -1276,7 +1276,7 @@ DO
     'NOTE: There is a bug, where monsters will sometimes not respawn, after being on-screen for at least one minute.
     'Please do NOT forget to fix this bug, somehow! Don't just leave it in, and block it off, or something else.
 
-    IF NOT owld THEN
+    IF NOT owld THEN 'If we're on the overworld map, then we skip the monster routine, because it doesn't have any
         '** MONSTERS/BOSSES/ACTION TRIGGERS (BUG: Enemies on leftmost column disappear when player's "back is turned")
         FOR q = 0 TO 27 'What screen row are we on? Are there monsters on that screen row, too?
             FOR o = 0 TO (atm - 1) 'Run through each monster in memory, and check its coordinates
@@ -1296,7 +1296,7 @@ DO
         NEXT q
 
         FOR r = 0 TO (atm - 1) 'Place any monsters that were just spawned, or are already active, on the screen
-            IF MnS(r, 5) = 1 THEN 'Bugfix: the "invisible, slow, leftward-sweeping, monster engulfing curtain" is history.
+            IF MnS(r, 5) = 1 THEN 'Bugfix: bye-bye "invisible, slow, leftward-sweeping, monster engulfing curtain"!
                 IF MnS(r, 0) > MnS(r, 4) THEN MnS(r, 0) = MnS(r, 4): MnS(r, 1) = MnS(r, 0) + (_WIDTH(MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)) - 1)
                 IF TrigPos(r, 1) = "R" THEN _PUTIMAGE (MnS(r, 0), MnS(r, 2) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0) ELSE _PUTIMAGE (MnS(r, 1), MnS(r, 2) - 1)-(MnS(r, 0), MnS(r, 3) - 1), MonsterAnim(VAL(TrigPos(r, 0)), 0, 0)
                 IF dh THEN DRAW "C" + STR$(&HFFFFFFFF) + " BM" + STR$(MnS(r, 1) + 6) + "," + STR$(MnS(r, 2)): Font "L" + LTRIM$(STR$(MnS(r, 0))) + " R" + LTRIM$(STR$(MnS(r, 1))) + " T" + LTRIM$(STR$(MnS(r, 2))) + " B" + LTRIM$(STR$(MnS(r, 3))) + " X" + LTRIM$(STR$(MnS(r, 4)))
@@ -1312,7 +1312,7 @@ DO
     END IF
 
     'STEP 3: Check to see if the game has just finished loading this level
-    'Debug and state information, such as character positioning (toggle on/off with F12+I in-game)
+    'Debug and state information, such as character positioning (you can turn this on or off by pushing F12+I in-game)
     IF dh THEN
         DRAW "C" + STR$(&HFFFF0000) + " BM30,33": Font STR$(CKT%)
         DRAW "C" + STR$(&HFFFF0000) + " BM2,43": Font STR$(CKL%)
@@ -1382,7 +1382,7 @@ DO
         LOOP
     ELSEIF LevelStart = 2 THEN ' This is if we're coming out of a "walk through a door" transition.
         cur& = _COPYIMAGE(0) 'Take a picture of the new playfield area.
-        FOR za = 0 TO 160
+        FOR za = 0 TO 160 'TODO: Refine this. It looks more like the screen gets squeezed, rather than spun around.
             '_PUTIMAGE (0, 0), cur&
             '_SETALPHA za, 0 TO _RGBA(255, 255, 255, 255), pic&
             '_PUTIMAGE (lft, top)-(rgt, bot), pic&
@@ -1489,9 +1489,13 @@ DO
 
     'STEP 6: Check for player input, to decide what to do, next
 
-    'TODO: Figure out how to reset the animation to the standing sprite, if the player stops moving.
     kp& = _KEYHIT 'For any extra keys that don't need to be held down to work.
     IF cont% = 0 THEN GOSUB KeyCtrlCheck ELSE GOSUB JoyCtrlCheck
+
+    'When the player lets go of the left or right movement key, Cricket will stop, and reset to the "standing" frame.
+    IF cont% = 0 AND kp& = MoveLeft - (MoveLeft * 2) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
+    IF cont% = 0 AND kp& = MoveRight - (MoveRight * 2) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
+    'TODO: Figure out how to do this with gamepads, as well. I think QB64 tells you if a button was let go of...
 
     '** Change for alpha 11: DEBUG keys are permanently mapped to the keyboard, and moved here.
 
@@ -1662,6 +1666,7 @@ IF atk = -1 AND _KEYDOWN(MoveLeft) THEN 'AND slidecount% = 0 I should probably r
                 sprpos(q) = sprpos(q) + 1
             NEXT q
             CKX% = CKX% - 1
+            IF plyr& = CrickMov(0) THEN plyr& = CrickMov(1): CKT% = CKB% - _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
             IF plyr& = CrickMov(mf) THEN mt = mt + 1
             IF mt = 20 THEN 'Changing this number speeds up, or slows down, the walking animation.
                 mt = 0: mf = mf + 1: IF mf = 7 THEN mf = 2
@@ -1678,6 +1683,7 @@ IF atk = -1 AND _KEYDOWN(MoveLeft) THEN 'AND slidecount% = 0 I should probably r
             'ELSEIF CKL% < 148 THEN
         ELSEIF CKL% > 0 AND CKL% < 148 OR sprnum(0) = -1 AND sprpos(0) = -8 OR stl = 27 OR str = 27 THEN 'Move Cricket
             CKL% = CKL% - 1: CKR% = CKR% - 1: CKX% = CKX% - 1
+            IF plyr& = CrickMov(0) THEN plyr& = CrickMov(1): CKT% = CKB% - _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
             IF plyr& = CrickMov(mf) THEN mt = mt + 1
             IF mt = 20 THEN
                 mt = 0: mf = mf + 1: IF mf = 7 THEN mf = 2
@@ -1773,7 +1779,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveRight) THEN 'AND slidecount% = 0 THEN
         noblock = 4
     END IF
     IF noblock > 3 THEN 'If nothing's in our way, where do we move?
-        IF jump% = -2 THEN jump% = 0: plyr& = CrickMov(1): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
+        IF jump% = -2 THEN jump% = 0: plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
         pf = 0 'pf is FALSE, meaning the player is facing RIGHT.
         str = 0 'This checks to see if we can scroll the screen.
         FOR wc = 0 TO 26 'If the right-most (off-screen) tile is a STOP tile...
@@ -1784,6 +1790,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveRight) THEN 'AND slidecount% = 0 THEN
                 sprpos(q) = sprpos(q) - 1
             NEXT q
             CKX% = CKX% + 1
+            IF plyr& = CrickMov(0) THEN plyr& = CrickMov(1): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1
             IF plyr& = CrickMov(mf) THEN mt = mt + 1
             IF mt = 20 THEN
                 mt = 0: mf = mf + 1: IF mf = 7 THEN mf = 2
@@ -1799,6 +1806,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveRight) THEN 'AND slidecount% = 0 THEN
             NEXT n
         ELSEIF CKL% < 148 OR str = 27 AND CKR% < 319 THEN
             CKL% = CKL% + 1: CKR% = CKR% + 1: CKX% = CKX% + 1
+            IF plyr& = CrickMov(0) THEN plyr& = CrickMov(1): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1
             IF plyr& = CrickMov(mf) THEN mt = mt + 1
             IF mt = 20 THEN
                 mt = 0: mf = mf + 1: IF mf = 7 THEN mf = 2
@@ -1842,11 +1850,11 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveUp) THEN 'AND slidecount% = 0 THEN
                 END IF
             END IF
         NEXT vd
-        FOR hc = 0 TO (grab& / (27 * scrcnt%)) 'Or is the door in a completely different spot?
+        FOR hc = 0 TO (grab& / (27 * scrcnt%) - 1) 'Or is the door in a completely different spot?
             FOR vc = 0 TO ((27 * scrcnt%) - 1) 'We'll start looking all over for it, if it is.
                 IF vc <> Vpos AND hc <> Ldoor THEN 'Skip over the door we just went into.
                     'BUG: The check below this sometimes goes out of range, on smaller levels. (...like Phringdott 2!)
-                    'LOCATE 10, 1: PRINT "COL: (" + LTRIM$(STR$(hc)) + ") " + LTRIM$(STR$(LevelData(vc, hc))) + " ": LOCATE 11, 1: PRINT "ROW: (" + LTRIM$(STR$(vc)) + ")": _DISPLAY
+                    LOCATE 10, 1: PRINT "COL: (" + LTRIM$(STR$(hc)) + ") " + LTRIM$(STR$(LevelData(vc, hc))) + " ": LOCATE 11, 1: PRINT "ROW: (" + LTRIM$(STR$(vc)) + ")": _DISPLAY
                     IF LevelData(vc, hc) = LevelData(Vpos, Ldoor) AND LevelData(vc, hc + 1) = LevelData(Vpos, Rdoor) THEN
                         ovp = vc: ohp = hc: odp = 1
                     END IF
@@ -1915,6 +1923,12 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveUp) THEN 'AND slidecount% = 0 THEN
                 c = c + 1
             NEXT rh
             c = 0
+            FOR mm = 0 TO (atm - 1)
+                IF MnS(mm, 5) = 1 THEN
+                    'Check every pixel between Cricket's left coordinate and 0, then his right coordinate and 319.
+                    'If global X is higher than 148, use it when calculating the distances, as well.
+                END IF
+            NEXT mm
             DO WHILE _KEYDOWN(MoveUp): LOOP 'Let go of the key!
             LevelStart = 2
             IF actbgm% >= 0 AND mc <> actbgm% THEN
@@ -2492,139 +2506,154 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         LET WhatIsTime! = 0
         _DISPLAY
     END IF
-    'IF cont% = 0 THEN 'You get this set of CASE statements if you're using the keyboard. (TODO: Gamepad support!)
-    SELECT CASE _KEYHIT 'Works with the keyboard repeat rate, unlike _KEYDOWN.
-        CASE 18432 ' Up arrow
+    IF cont% = 0 THEN 'You get these CASE statements if you're using the keyboard.
+        SELECT CASE _KEYHIT 'Works with the keyboard repeat rate, unlike _KEYDOWN.
+            CASE 18432 ' Up arrow
+                Selector = Selector - 1
+                IF Sector = 0 THEN IF Selector = 0 THEN Selector = 4
+                IF Sector = 1 THEN IF Selector = 4 THEN Selector = 14
+                IF Sector = 2 THEN IF Selector = 14 THEN Selector = 16
+                IF Sector = 3 THEN IF Selector = 16 THEN Selector = 19
+            CASE 20480 ' Down arrow
+                Selector = Selector + 1
+                IF Sector = 0 THEN IF Selector = 5 THEN Selector = 1
+                IF Sector = 1 THEN IF Selector = 15 THEN Selector = 5
+                IF Sector = 2 THEN IF Selector = 17 THEN Selector = 15
+                IF Sector = 3 THEN IF Selector = 20 THEN Selector = 17
+            CASE 13 'ENTER
+                GOSUB PMExec 'This is so I don't have to duplicate this routine, for when you're using a gamepad.
+                IF bak THEN bak = 0: EXIT DO 'In place of the "EXIT DO" commands from the SELECT CASE routine.
+            CASE 27 'ESC
+                IF Sector = 0 THEN 'From the main pause menu
+                    _SNDPLAY SEF(1)
+                    EXIT DO
+                ELSEIF Sector = 3 THEN 'From the "ESC" menu
+                    _SNDPLAY SEF(1)
+                    Sector = 0
+                    Selector = 1
+                    EXIT DO
+                ELSEIF Sector = 2 THEN 'From the "exit to menu" menu
+                    _SNDPLAY SEF(1)
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
+                    IF RecSpot = 0 THEN Sector = 0: Selector = 4
+                    IF RecSpot = 1 THEN Sector = 3: Selector = 18
+                    IF RecSpot = 2 THEN Sector = 3: Selector = 19
+                    RecSpot = 0
+                ELSEIF Sector = 1 THEN 'From the "controls" menu
+                    _SNDPLAY SEF(1)
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
+                    Sector = 0
+                    Selector = 2
+                END IF
+            CASE MovePause 'Press the PAUSE key again
+                IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix: hitting Pause from the ESC menu bugs the Pause menu
+                EXIT DO
+        END SELECT
+    ELSEIF cont% > 0 THEN 'And you get these more complicated, repetitive statements if you're using a gamepad.
+        IF JoyMoveOp(0) > 0 AND MoveUp < 128 THEN
+            IF STICK(ActionUp, JoyMoveOp(0)) < MoveUp THEN
+                Selector = Selector - 1
+                IF Sector = 0 THEN IF Selector = 0 THEN Selector = 4
+                IF Sector = 1 THEN IF Selector = 4 THEN Selector = 14
+                IF Sector = 2 THEN IF Selector = 14 THEN Selector = 16
+                IF Sector = 3 THEN IF Selector = 16 THEN Selector = 19
+            END IF
+        ELSEIF JoyMoveOp(0) > 0 AND MoveUp > 128 THEN
+            IF STICK(ActionUp, JoyMoveOp(0)) > MoveUp THEN
+                Selector = Selector - 1
+                IF Sector = 0 THEN IF Selector = 0 THEN Selector = 4
+                IF Sector = 1 THEN IF Selector = 4 THEN Selector = 14
+                IF Sector = 2 THEN IF Selector = 14 THEN Selector = 16
+                IF Sector = 3 THEN IF Selector = 16 THEN Selector = 19
+            END IF
+        ELSEIF JoyMoveOp(0) = 0 AND STRIG(MoveUp, ActionUp) THEN
             Selector = Selector - 1
             IF Sector = 0 THEN IF Selector = 0 THEN Selector = 4
             IF Sector = 1 THEN IF Selector = 4 THEN Selector = 14
             IF Sector = 2 THEN IF Selector = 14 THEN Selector = 16
             IF Sector = 3 THEN IF Selector = 16 THEN Selector = 19
-        CASE 20480 ' Down arrow
+        END IF
+
+        IF JoyMoveOp(1) > 0 AND MoveDown < 128 THEN
+            IF STICK(ActionDown, JoyMoveOp(1)) < MoveDown THEN
+                Selector = Selector + 1
+                IF Sector = 0 THEN IF Selector = 5 THEN Selector = 1
+                IF Sector = 1 THEN IF Selector = 15 THEN Selector = 5
+                IF Sector = 2 THEN IF Selector = 17 THEN Selector = 15
+                IF Sector = 3 THEN IF Selector = 20 THEN Selector = 17
+            END IF
+        ELSEIF JoyMoveOp(1) > 0 AND MoveDown > 128 THEN
+            IF STICK(ActionDown, JoyMoveOp(1)) > MoveDown THEN
+                Selector = Selector + 1
+                IF Sector = 0 THEN IF Selector = 5 THEN Selector = 1
+                IF Sector = 1 THEN IF Selector = 15 THEN Selector = 5
+                IF Sector = 2 THEN IF Selector = 17 THEN Selector = 15
+                IF Sector = 3 THEN IF Selector = 20 THEN Selector = 17
+            END IF
+        ELSEIF JoyMoveOp(1) = 0 AND STRIG(MoveDown, ActionDown) THEN
             Selector = Selector + 1
             IF Sector = 0 THEN IF Selector = 5 THEN Selector = 1
             IF Sector = 1 THEN IF Selector = 15 THEN Selector = 5
             IF Sector = 2 THEN IF Selector = 17 THEN Selector = 15
             IF Sector = 3 THEN IF Selector = 20 THEN Selector = 17
-        CASE 13 ' ENTER
-            SELECT CASE Selector 'A tiny bit of code optimization, here. (which I totally copied from CricketMenu)
-                CASE 1 'Unpause
-                    _SNDPLAY SEF(4)
+        END IF
+
+        IF JoyMoveOp(5) > 0 AND MoveJump < 128 THEN
+            IF STICK(ActionJump, JoyMoveOp(5)) < MoveJump THEN GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
+        ELSEIF JoyMoveOp(5) > 0 AND MoveJump > 128 THEN
+            IF STICK(ActionJump, JoyMoveOp(5)) > MoveJump THEN GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
+        ELSEIF JoyMoveOp(5) = 0 AND STRIG(MoveJump, ActionJump) THEN GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
+        END IF
+
+        IF JoyMoveOp(6) > 0 AND MoveAttack < 128 THEN 'Get ready; this is about to get REALLY repetitive.
+            IF STICK(ActionAttack, JoyMoveOp(6)) < MoveAttack THEN
+                IF Sector = 0 THEN 'From the main pause menu
+                    _SNDPLAY SEF(1)
                     EXIT DO
-                CASE 2 'Controls
-                    _SNDPLAY SEF(4)
-                    _PUTIMAGE (0, 0)-(319, 239), ps&
-                    Sector = 1
-                    Selector = 5
-                CASE 3 'Music Toggle (and later ambience toggle, too)
-                    _SNDPLAY SEF(8)
-                    IF actbgm% >= 0 THEN
-                        prevbgm% = actbgm%
-                        actbgm% = -1
-                        _SNDSTOP bgm&
-                        _SNDCLOSE bgm&
-                        _PUTIMAGE (0, 0)-(319, 239), ps&
-                    ELSEIF actbgm% = -1 THEN
-                        actbgm% = prevbgm%
-                        bgm& = _SNDOPEN(BGM(actbgm%), "VOL,PAUSE")
-                        _PUTIMAGE (0, 0)-(319, 239), ps&
-                    END IF
-                CASE 4 'Exit to Menu
-                    _SNDPLAY SEF(4)
-                    _PUTIMAGE (0, 0)-(319, 239), ps&
-                    Sector = 2
-                    Selector = 15
-                CASE 5 'Weapon of Choice
-                    _SNDPLAY SEF(8)
-                    cont% = cont% + 1
-                    IF cont% > gp% THEN cont% = 0
-                    'Change the keymaps accordingly.
-                    IF cont% = 0 THEN 'Keyboard
-                        MoveUp = DefKeys(0, pn, 0, 0): MoveDown = DefKeys(0, pn, 0, 1)
-                        MoveLeft = DefKeys(0, pn, 0, 2): MoveRight = DefKeys(0, pn, 0, 3)
-                        MoveRun = DefKeys(0, pn, 0, 4): MoveJump = DefKeys(0, pn, 0, 5)
-                        MoveAttack = DefKeys(0, pn, 0, 6): MovePause = DefKeys(0, pn, 0, 7)
-                    ELSEIF cont% > 0 THEN 'Gamepad or Joystick
-                        MoveUp = DefKeys(cont%, pn, 0, 0): ActionUp = DefKeys(cont%, pn, 1, 0)
-                        MoveDown = DefKeys(cont%, pn, 0, 1): ActionDown = DefKeys(cont%, pn, 1, 1)
-                        MoveLeft = DefKeys(cont%, pn, 0, 2): ActionLeft = DefKeys(cont%, pn, 1, 2)
-                        MoveRight = DefKeys(cont%, pn, 0, 3): ActionRight = DefKeys(cont%, pn, 1, 3)
-                        MoveRun = DefKeys(cont%, pn, 0, 4): ActionRun = DefKeys(cont%, pn, 1, 4)
-                        MoveJump = DefKeys(cont%, pn, 0, 5): ActionJump = DefKeys(cont%, pn, 1, 5)
-                        MoveAttack = DefKeys(cont%, pn, 0, 6): ActionAttack = DefKeys(cont%, pn, 1, 6)
-                        MovePause = DefKeys(cont%, pn, 0, 7): ActionPause = DefKeys(cont%, pn, 1, 7)
-                        FOR kn = 0 TO 7: JoyMoveOp(kn) = DefKeys(cont%, pn, 2, kn): NEXT kn
-                    END IF
-                    _PUTIMAGE (0, 0)-(319, 239), ps&
-                CASE 6 'Control Scheme Preset
-                    _SNDPLAY SEF(8)
-                    pn = pn + 1
-                    IF pn > 2 THEN pn = 0
-                    IF cont% = 0 AND pn < 2 THEN 'Keyboard (the keymaps change, too)
-                        MoveUp = DefKeys(0, pn, 0, 0): MoveDown = DefKeys(0, pn, 0, 1)
-                        MoveLeft = DefKeys(0, pn, 0, 2): MoveRight = DefKeys(0, pn, 0, 3)
-                        MoveRun = DefKeys(0, pn, 0, 4): MoveJump = DefKeys(0, pn, 0, 5)
-                        MoveAttack = DefKeys(0, pn, 0, 6): MovePause = DefKeys(0, pn, 0, 7)
-                    ELSEIF cont% > 0 AND pn < 2 THEN 'Gamepad or Joystick
-                        MoveUp = DefKeys(cont%, pn, 0, 0): ActionUp = DefKeys(cont%, pn, 1, 0)
-                        MoveDown = DefKeys(cont%, pn, 0, 1): ActionDown = DefKeys(cont%, pn, 1, 1)
-                        MoveLeft = DefKeys(cont%, pn, 0, 2): ActionLeft = DefKeys(cont%, pn, 1, 2)
-                        MoveRight = DefKeys(cont%, pn, 0, 3): ActionRight = DefKeys(cont%, pn, 1, 3)
-                        MoveRun = DefKeys(cont%, pn, 0, 4): ActionRun = DefKeys(cont%, pn, 1, 4)
-                        MoveJump = DefKeys(cont%, pn, 0, 5): ActionJump = DefKeys(cont%, pn, 1, 5)
-                        MoveAttack = DefKeys(cont%, pn, 0, 6): ActionAttack = DefKeys(cont%, pn, 1, 6)
-                        MovePause = DefKeys(cont%, pn, 0, 7): ActionPause = DefKeys(cont%, pn, 1, 7)
-                        FOR kn = 0 TO 7: JoyMoveOp(kn) = DefKeys(cont%, pn, 2, kn): NEXT kn
-                    END IF
-                    _PUTIMAGE (0, 0)-(319, 239), ps&
-                CASE 7: GOSUB Remap 'Code OPTIMIZATION YEAAAAH!! Waaaa! Shoo-be-doo-boo-yeah! (know the reference?)
-                CASE 8: GOSUB Remap
-                CASE 9: GOSUB Remap
-                CASE 10: GOSUB Remap
-                CASE 11: GOSUB Remap
-                CASE 12: GOSUB Remap
-                CASE 13: GOSUB Remap
-                CASE 14: GOSUB Remap
-                CASE 15 'Yes! I'm positive!
-                    _SNDPLAY SEF(4)
-                    IF RecSpot = 2 THEN 'If this menu was called, after picking "back to my desktop"
-                        IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
-                        IF _FULLSCREEN THEN _FULLSCREEN _OFF
-                        END
-                    ELSE 'If this menu was called, after picking "exit to menu" or "back to the menu"
-                        IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&: _SNDCLOSE bgm& 'Kill the background music
-                        actbgm% = 0: prevbgm% = 0 'Reset the active song to 0
-                        FadeOut 'Fade to black
-                        _FREEIMAGE ps& 'Get rid of the saved image of the screen
-                        res = 1 'So the game will know that it doesn't have to DIM critical graphics engine arrays
-                        RecSpot = 0: Sector = 0: Selector = 1 'Bugfix: wrong options displayed after exit to menu
-                        GOTO LoopBack 'Return to the main menu (I can, from a subroutine, without messing things up!)
-                    END IF
-                CASE 16 'No, wait! Not yet!
-                    _SNDPLAY SEF(4)
-                    _PUTIMAGE (0, 0)-(319, 239), ps&
+                ELSEIF Sector = 3 THEN 'From the "ESC" menu
+                    _SNDPLAY SEF(1)
+                    Sector = 0
+                    Selector = 1
+                    EXIT DO
+                ELSEIF Sector = 2 THEN 'From the "exit to menu" menu
+                    _SNDPLAY SEF(1)
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
                     IF RecSpot = 0 THEN Sector = 0: Selector = 4
                     IF RecSpot = 1 THEN Sector = 3: Selector = 18
                     IF RecSpot = 2 THEN Sector = 3: Selector = 19
                     RecSpot = 0
-                CASE 17 'Back to the Game!
-                    _SNDPLAY SEF(4)
-                    Sector = 0: Selector = 1 'Bugfix: pressing ENTER on this option messes up the Pause menu
+                ELSEIF Sector = 1 THEN 'From the "controls" menu
+                    _SNDPLAY SEF(1)
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
+                    Sector = 0
+                    Selector = 2
+                END IF
+            END IF
+        ELSEIF JoyMoveOp(6) > 0 AND MoveAttack > 128 THEN
+            IF STICK(ActionAttack, JoyMoveOp(6)) > MoveAttack THEN
+                IF Sector = 0 THEN 'From the main pause menu
+                    _SNDPLAY SEF(1)
                     EXIT DO
-                CASE 18 'Back to the Menu!
-                    _SNDPLAY SEF(4)
-                    _PUTIMAGE (0, 0)-(319, 239), ps&
-                    Sector = 2
-                    Selector = 15
-                    RecSpot = 1
-                CASE 19 'Back to My Desktop!
-                    _SNDPLAY SEF(4)
-                    _PUTIMAGE (0, 0)-(319, 239), ps&
-                    Sector = 2
-                    Selector = 15
-                    RecSpot = 2
-            END SELECT
-        CASE 27 'ESC
+                ELSEIF Sector = 3 THEN 'From the "ESC" menu
+                    _SNDPLAY SEF(1)
+                    Sector = 0
+                    Selector = 1
+                    EXIT DO
+                ELSEIF Sector = 2 THEN 'From the "exit to menu" menu
+                    _SNDPLAY SEF(1)
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
+                    IF RecSpot = 0 THEN Sector = 0: Selector = 4
+                    IF RecSpot = 1 THEN Sector = 3: Selector = 18
+                    IF RecSpot = 2 THEN Sector = 3: Selector = 19
+                    RecSpot = 0
+                ELSEIF Sector = 1 THEN 'From the "controls" menu
+                    _SNDPLAY SEF(1)
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
+                    Sector = 0
+                    Selector = 2
+                END IF
+            END IF
+        ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) THEN
             IF Sector = 0 THEN 'From the main pause menu
                 _SNDPLAY SEF(1)
                 EXIT DO
@@ -2646,22 +2675,26 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                 Sector = 0
                 Selector = 2
             END IF
-        CASE MovePause 'Press the PAUSE key again
-            IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix: hitting Pause from the ESC menu bugs the Pause menu
+        END IF
+
+        IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN
+            IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN
+                IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
+                EXIT DO
+            END IF
+        ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN
+            IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN
+                IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
+                EXIT DO
+            END IF
+        ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN
+            IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
             EXIT DO
-    END SELECT
-    'ELSEIF cont% > 0 THEN 'Or you get this set if you're using a gamepad. (we should uncomment this, and add it in)
-    'END IF
+        END IF
+
+    END IF
 LOOP
 
-'IF cont% = 0 THEN 'If the keyboard is the controller...
-'DO: LOOP UNTIL _KEYHIT = MovePause 'Press the key again to unpause
-'ELSEIF cont% > 0 THEN '...or if a gamepad is the controller...
-'    DO 'Wait for the right button/thumbstick to be pressed, then unpause
-'        IF JoyMoveOp(7) > 0 AND STICK(ActionPause, JoyMoveOp(7)) = MovePause THEN EXIT DO
-'        IF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN EXIT DO
-'LOOP
-'END IF
 _FREEIMAGE ps&
 IF actbgm% >= 0 THEN IF _SNDPAUSED(bgm&) THEN _SNDPLAY bgm& ELSE _SNDLOOP bgm&
 IF jump% > 0 THEN jdrop = 1
@@ -2972,6 +3005,129 @@ tick = tick - 1
 IF tick = 59 THEN _SNDPLAY SEF(15)
 IF tick = 0 THEN _SNDPLAY SEF(16)
 RETURN
+
+'*********************************************************
+PMExec: ' What happens when you hit ENTER on the keyboard, or the "select" action button on your gamepad, in pause.
+SELECT CASE Selector 'A tiny bit of code optimization, here. (which I totally copied from CricketMenu)
+    CASE 1 'Unpause
+        _SNDPLAY SEF(4)
+        bak = 1
+    CASE 2 'Controls
+        _SNDPLAY SEF(4)
+        _PUTIMAGE (0, 0)-(319, 239), ps&
+        Sector = 1
+        Selector = 5
+    CASE 3 'Music Toggle (and later ambience toggle, too)
+        _SNDPLAY SEF(8)
+        IF actbgm% >= 0 THEN
+            prevbgm% = actbgm%
+            actbgm% = -1
+            _SNDSTOP bgm&
+            _SNDCLOSE bgm&
+            _PUTIMAGE (0, 0)-(319, 239), ps&
+        ELSEIF actbgm% = -1 THEN
+            actbgm% = prevbgm%
+            bgm& = _SNDOPEN(BGM(actbgm%), "VOL,PAUSE")
+            _PUTIMAGE (0, 0)-(319, 239), ps&
+        END IF
+    CASE 4 'Exit to Menu
+        _SNDPLAY SEF(4)
+        _PUTIMAGE (0, 0)-(319, 239), ps&
+        Sector = 2
+        Selector = 15
+    CASE 5 'Weapon of Choice
+        _SNDPLAY SEF(8)
+        cont% = cont% + 1
+        IF cont% > gp% THEN cont% = 0
+        'Change the keymaps accordingly.
+        IF cont% = 0 THEN 'Keyboard
+            MoveUp = DefKeys(0, pn, 0, 0): MoveDown = DefKeys(0, pn, 0, 1)
+            MoveLeft = DefKeys(0, pn, 0, 2): MoveRight = DefKeys(0, pn, 0, 3)
+            MoveRun = DefKeys(0, pn, 0, 4): MoveJump = DefKeys(0, pn, 0, 5)
+            MoveAttack = DefKeys(0, pn, 0, 6): MovePause = DefKeys(0, pn, 0, 7)
+        ELSEIF cont% > 0 THEN 'Gamepad or Joystick
+            MoveUp = DefKeys(cont%, pn, 0, 0): ActionUp = DefKeys(cont%, pn, 1, 0)
+            MoveDown = DefKeys(cont%, pn, 0, 1): ActionDown = DefKeys(cont%, pn, 1, 1)
+            MoveLeft = DefKeys(cont%, pn, 0, 2): ActionLeft = DefKeys(cont%, pn, 1, 2)
+            MoveRight = DefKeys(cont%, pn, 0, 3): ActionRight = DefKeys(cont%, pn, 1, 3)
+            MoveRun = DefKeys(cont%, pn, 0, 4): ActionRun = DefKeys(cont%, pn, 1, 4)
+            MoveJump = DefKeys(cont%, pn, 0, 5): ActionJump = DefKeys(cont%, pn, 1, 5)
+            MoveAttack = DefKeys(cont%, pn, 0, 6): ActionAttack = DefKeys(cont%, pn, 1, 6)
+            MovePause = DefKeys(cont%, pn, 0, 7): ActionPause = DefKeys(cont%, pn, 1, 7)
+            FOR kn = 0 TO 7: JoyMoveOp(kn) = DefKeys(cont%, pn, 2, kn): NEXT kn
+        END IF
+        _PUTIMAGE (0, 0)-(319, 239), ps&
+    CASE 6 'Control Scheme Preset
+        _SNDPLAY SEF(8)
+        pn = pn + 1
+        IF pn > 2 THEN pn = 0
+        IF cont% = 0 AND pn < 2 THEN 'Keyboard (the keymaps change, too)
+            MoveUp = DefKeys(0, pn, 0, 0): MoveDown = DefKeys(0, pn, 0, 1)
+            MoveLeft = DefKeys(0, pn, 0, 2): MoveRight = DefKeys(0, pn, 0, 3)
+            MoveRun = DefKeys(0, pn, 0, 4): MoveJump = DefKeys(0, pn, 0, 5)
+            MoveAttack = DefKeys(0, pn, 0, 6): MovePause = DefKeys(0, pn, 0, 7)
+        ELSEIF cont% > 0 AND pn < 2 THEN 'Gamepad or Joystick
+            MoveUp = DefKeys(cont%, pn, 0, 0): ActionUp = DefKeys(cont%, pn, 1, 0)
+            MoveDown = DefKeys(cont%, pn, 0, 1): ActionDown = DefKeys(cont%, pn, 1, 1)
+            MoveLeft = DefKeys(cont%, pn, 0, 2): ActionLeft = DefKeys(cont%, pn, 1, 2)
+            MoveRight = DefKeys(cont%, pn, 0, 3): ActionRight = DefKeys(cont%, pn, 1, 3)
+            MoveRun = DefKeys(cont%, pn, 0, 4): ActionRun = DefKeys(cont%, pn, 1, 4)
+            MoveJump = DefKeys(cont%, pn, 0, 5): ActionJump = DefKeys(cont%, pn, 1, 5)
+            MoveAttack = DefKeys(cont%, pn, 0, 6): ActionAttack = DefKeys(cont%, pn, 1, 6)
+            MovePause = DefKeys(cont%, pn, 0, 7): ActionPause = DefKeys(cont%, pn, 1, 7)
+            FOR kn = 0 TO 7: JoyMoveOp(kn) = DefKeys(cont%, pn, 2, kn): NEXT kn
+        END IF
+        _PUTIMAGE (0, 0)-(319, 239), ps&
+    CASE 7: GOSUB Remap 'Code OPTIMIZATION YEAAAAH!! Waaaa! Shoo-be-doo-boo-yeah! (know the reference?)
+    CASE 8: GOSUB Remap
+    CASE 9: GOSUB Remap
+    CASE 10: GOSUB Remap
+    CASE 11: GOSUB Remap
+    CASE 12: GOSUB Remap
+    CASE 13: GOSUB Remap
+    CASE 14: GOSUB Remap
+    CASE 15 'Yes! I'm positive!
+        _SNDPLAY SEF(4)
+        IF RecSpot = 2 THEN 'If this menu was called, after picking "back to my desktop"
+            IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&
+            IF _FULLSCREEN THEN _FULLSCREEN _OFF
+            END
+        ELSE 'If this menu was called, after picking "exit to menu" or "back to the menu"
+            IF actbgm% >= 0 AND bgm& THEN _SNDSTOP bgm&: _SNDCLOSE bgm& 'Kill the background music
+            actbgm% = 0: prevbgm% = 0 'Reset the active song to 0
+            FadeOut 'Fade to black
+            _FREEIMAGE ps& 'Get rid of the saved image of the screen
+            res = 1 'So the game will know that it doesn't have to DIM critical graphics engine arrays
+            RecSpot = 0: Sector = 0: Selector = 1 'Bugfix: wrong options displayed after exit to menu
+            GOTO LoopBack 'Return to the main menu (I can, from a subroutine, without messing things up!)
+        END IF
+    CASE 16 'No, wait! Not yet!
+        _SNDPLAY SEF(4)
+        _PUTIMAGE (0, 0)-(319, 239), ps&
+        IF RecSpot = 0 THEN Sector = 0: Selector = 4
+        IF RecSpot = 1 THEN Sector = 3: Selector = 18
+        IF RecSpot = 2 THEN Sector = 3: Selector = 19
+        RecSpot = 0
+    CASE 17 'Back to the Game!
+        _SNDPLAY SEF(4)
+        Sector = 0: Selector = 1 'Bugfix: pressing ENTER on this option messes up the Pause menu
+        bak = 1
+    CASE 18 'Back to the Menu!
+        _SNDPLAY SEF(4)
+        _PUTIMAGE (0, 0)-(319, 239), ps&
+        Sector = 2
+        Selector = 15
+        RecSpot = 1
+    CASE 19 'Back to My Desktop!
+        _SNDPLAY SEF(4)
+        _PUTIMAGE (0, 0)-(319, 239), ps&
+        Sector = 2
+        Selector = 15
+        RecSpot = 2
+END SELECT
+RETURN
+
+
 
 '*********************************************************
 Remap: 'Aside from a few code changes, this is essentially the same as the subroutine within CricketMenu.
