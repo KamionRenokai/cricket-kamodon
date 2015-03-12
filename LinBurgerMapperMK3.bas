@@ -51,6 +51,396 @@ NEXT l
 FontTile(36) = _LOADIMAGE(respath$ + hudfldr$ + "Star" + ext$)
 'Don't forget to make a "hyphen" tile, and then load it here.
 
+mapld = 0
+HelpMsg1$ = "This is how the map will look, in-game. Use the arrow keys to free-scroll."
+HelpMsg2$ = "Select the zone that contains the level you want to edit."
+HelpMsg3$ = "Now, pick the level (or overworld map) you want to edit."
+
+PRINT "Press ENTER to start."
+DO
+LOOP WHILE INKEY$ = ""
+
+CLS
+Setup:
+IF mapld THEN
+    'Pre drawing routine loop routines -- setting up variables and arrays
+    lives = 5
+    tick = 400
+    'tsc = (256 * lc%) + rc% 'Should be 511
+    'DIM sprnum(0 TO (tsc - 1)) AS INTEGER
+    'DIM sprpos(0 TO (tsc - 1)) AS INTEGER
+    DIM sprseg(0 TO 80) AS INTEGER 'How much of each column is on-screen (in 8ths)
+    DIM sprnum(0 TO 80) AS INTEGER 'Which sprites are on the screen
+    DIM sprpos(0 TO 80) AS INTEGER 'The X coordinate of each column of sprites
+    DIM verrow(0 TO 60) AS INTEGER 'The Y coordinate of each row of sprites
+    FOR n = 0 TO 80 '(tsc - 1)
+        sprseg(n) = 8
+        sprnum(n) = (n - 1)
+        sprpos(n) = ((n - 1) * 8)
+    NEXT n
+    FOR n = 0 TO 60: verrow(n) = ((n - 1) * 8): NEXT n
+    'sprseg(0) = 8
+    'sprnum(0) = 0
+    'sprpos(0) = -8
+
+    'CKL% = 0 '148 'Left-most X coordinate (player)
+    CKR% = CKL% + _WIDTH(plyr&) - 1 '171 'Right-most X coordinate (player)
+    'CKT% = 0 '172 'Top-most Y coordinate (player)
+    CKB% = CKT% + _HEIGHT(plyr&) - 1 'Bottom-most Y coordinate (player)
+    CKX% = 0 'Global X coordinate, for absolute positioning on the map
+
+    w = vert% 'This should work, otherwise try setting it to 131.
+
+    DIM UnderFoot(0 TO 3) AS INTEGER
+    DIM AboveHead(0 TO 3) AS INTEGER
+    DIM InFrontOf(0 TO 4) AS INTEGER
+    DIM BehindMoi(0 TO 4) AS INTEGER
+
+    _TITLE "BurgerMapper: PHRINGDOTT 1"
+END IF
+
+DO
+    'CLS
+    'HUD drawing (tile placing) routine
+
+    LINE (0, 0)-(639, 479), _RGB32(0, 0, 180), BF
+    LINE (0, 50)-(639, 479), _RGB32(160, 160, 160), B
+    COLOR _RGB32(255, 255, 255), _RGB32(0, 0, 180)
+    ' TODO: Make this scroll horizontally, so I can display more help information.
+    LOCATE 1, 1: IF mapld THEN PRINT HelpMsg1$ ELSE PRINT HelpMsg2$
+    DRAW "B M3, 31": DrawBox 4
+    DRAW "B M68, 31": DrawBox 4
+    DRAW "B M133, 31": DrawBox 4
+    DRAW "B M198, 31": DrawBox 4
+    DRAW "B M263, 31": DrawBox 4
+    DRAW "B M328, 31": DrawBox 4
+    DRAW "B M510, 31": DrawBox 4
+    DRAW "B M575, 31": IF mapld THEN DrawBox 4 ELSE DrawBox 3
+    DRAW "B M8, 38 C" + STR$(&HFFFFFFFF): Font "EDIT MAP"
+    DRAW "B M8, 45": Font "SETTINGS"
+    DRAW "B M79, 38": Font "CHANGE"
+    DRAW "B M87, 45": Font "TILE"
+    DRAW "B M143, 38": Font "DELETE"
+    DRAW "B M151, 45": Font "TILE"
+    DRAW "B M205, 38": Font "ADD NEW"
+    DRAW "B M205, 45": Font "MONSTER"
+    DRAW "B M274, 38": Font "CHANGE"
+    DRAW "B M270, 45": Font "MONSTER"
+    DRAW "B M336, 38": Font "TRIGGER"
+    DRAW "B M336, 45": Font "OPTIONS"
+
+    IF mapld THEN DRAW "B M282, 24": Font "PHRINGDOTT 1"
+
+    DRAW "B M525,38": Font "COLL-"
+    DRAW "B M525,45": Font "ISION"
+    IF mapld THEN DRAW "B M585,38 C" + STR$(&HFFFFFFFF) ELSE DRAW "B M585,38 C" + STR$(&HFFFFFF77)
+    Font "CHANGE"
+    IF mapld THEN DRAW "B M590,45 C" + STR$(&HFFFFFFFF) ELSE DRAW "B M590,45 C" + STR$(&HFFFFFF77)
+    Font "LEVEL"
+
+    'Top row of the HUD
+
+    IF mapld THEN
+        'Tile rendering routine -- draw each layer onto the screen, in sequence
+        FOR y = 0 TO 60 'Originally 28; 56 was the sweet spot, but 60 worked, too
+            FOR x = 0 TO 80 'Originally 41 (80's good, and 82 works, too)
+                'LOCATE 1, 1: PRINT "COLUMN: " + LTRIM$(STR$(w)) + "  ROW: " + LTRIM$(STR$(y)) + "  LEFTMOST: " + STR$(sprpos(0))
+                IF sprnum(x) >= 0 AND verrow(y) < 400 THEN '360/380 are pretty good. It was originally "verrow(y) < 176"
+                    IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background1((w - 1) + y, sprnum(x))), _CLIP PSET
+                    IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+                    IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground1((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+                    IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
+                END IF
+            NEXT x
+        NEXT y
+
+        FOR clr = 0 TO 3
+            UnderFoot(clr) = 0
+            AboveHead(clr) = 0
+            InFrontOf(clr) = 0
+            BehindMoi(clr) = 0
+        NEXT clr
+        InFrontOf(4) = 0: BehindMoi(4) = 0
+        PCol = 0: PRow = 0: topright = 0: topleft = 0
+
+        'This is how we find out which sprite Cricket is next to/on top of/under.
+        SELECT CASE (CKB% + 1) 'Start by finding the row that Cricket's above.
+            'TODO: MAKE SOMETHING MORE EFFICIENT THAN THIS!!!
+            CASE IS < 71
+                PRow = 0
+            CASE IS < 79
+                PRow = 1
+            CASE IS < 87
+                PRow = 2
+            CASE IS < 95
+                PRow = 3
+            CASE IS < 103
+                PRow = 4
+            CASE IS < 111
+                PRow = 5
+            CASE IS < 119
+                PRow = 6
+            CASE IS < 127
+                PRow = 7
+            CASE IS < 135
+                PRow = 8
+            CASE IS < 143
+                PRow = 9
+            CASE IS < 151
+                PRow = 10
+            CASE IS < 159
+                PRow = 11
+            CASE IS < 167
+                PRow = 12
+            CASE IS < 175
+                PRow = 13
+            CASE IS < 183
+                PRow = 14
+            CASE IS < 191
+                PRow = 15
+            CASE IS < 199
+                PRow = 16
+            CASE IS < 207
+                PRow = 17
+            CASE IS < 215
+                PRow = 18
+            CASE IS < 223
+                PRow = 19
+            CASE IS < 231
+                PRow = 20
+            CASE IS < 239
+                PRow = 21
+        END SELECT
+        'And now, for a more efficient routine: what column are we on?
+        FOR gx = 0 TO CKX%
+            IF gx MOD 8 = 0 THEN PCol = PCol + 1
+        NEXT gx
+        sn = 0 'For safety purposes, and, well... just because. xD
+        UnderFoot(0) = (PCol - 1)
+        AboveHead(0) = (PCol - 1)
+        'Now that we know exactly what sprite the bottom-leftmost pixel that makes
+        'up Cricket is on, let's see if he's standing on three, or four tiles.
+        FOR ldir = 0 TO 22 '23 other pixels, counting the one it starts on.
+            IF (CKX% + (ldir + 1)) MOD 8 = 0 THEN 'If it divides evenly into 8...
+                UnderFoot(sn + 1) = UnderFoot(sn) + 1 'Make the next tile in both
+                AboveHead(sn + 1) = AboveHead(sn) + 1 'sets one more than before
+                sn = sn + 1
+            END IF
+        NEXT ldir
+
+        'And with a routine that's somewhat efficient, what's on each side?
+        so = 0
+        InFrontOf(0) = PRow - 4
+        BehindMoi(0) = PRow - 4
+        FOR side = 0 TO 30 '31 other pixels, counting the one it starts on.
+            IF (CKT% + (side + 1)) MOD 8 = 0 THEN 'If it divides evenly into 8...
+                InFrontOf(so + 1) = InFrontOf(so) + 1 'Make the next tile in both
+                BehindMoi(so + 1) = BehindMoi(so) + 1 'sets one more than before
+                so = so + 1
+            END IF
+        NEXT side
+        topright = AboveHead(2) + 1
+        topleft = AboveHead(0)
+
+        'Now, we see what kinds of tiles the sprites under Cricket are. If any of
+        'them match the types mentioned below, Cricket will stop falling.
+        'IF oco THEN oco = 0
+        'IF jump% = 0 THEN jdrop = 1
+        'FOR Foot = 0 TO (sn - 1) 'The number of sprites below Cricket's feet
+        '    IF LevelData(w + PRow, UnderFoot(Foot)) = 1 THEN 'Platform
+        '        'IF jump% = -2 THEN oco = oco + 1 ELSE
+        '        jdrop = 0: jump% = 0
+        '    ELSEIF LevelData(w + PRow, UnderFoot(Foot)) = 2 THEN 'Wall
+        '        'IF jump% = -2 THEN oco = oco + 1 ELSE
+        '        jdrop = 0: jump% = 0
+        '    END IF
+        '    IF jump% = -2 AND LevelData(w + PRow, UnderFoot(Foot)) <> 3 THEN
+        '        oco = oco + 1 'Also check to see if Cricket's climbing something
+        '    END IF
+        '    IF oco > 2 THEN jump% = 0: jdrop = 1 'If he isn't, make him fall
+        'NEXT Foot
+
+        'Quick check: did Cricket jump or fall off the screen?
+        'IF CKT% >= 241 AND slidecount% = 0 AND (w + 22) / 22 = scrcnt% THEN 'Check his coordinates
+        '    'IF (w + 22) / 22 = scrcnt% THEN 'Bottom screen? That's a death.
+        '    jdrop = 0 'Stop him from falling
+        '    jump% = -1 'Reset the height counter
+        '    'IF _SNDPLAYING(bgm&) THEN _SNDSTOP bgm& 'Stop the background music
+        '    '_SNDPLAY SEF(3) 'Play the death sound
+        '    CKT% = 240: CKB% = (CKT% + _HEIGHT(plyr&) - 1) 'Move Cricket, so the sound only plays once
+        '    IF lives > 0 THEN lives = lives - 1 'Take away a life
+        '    'At some point, the game will jump to the "try again?" screen.
+        '    'For now, all you have to do is press "R" to revive Cricket.
+        'ELSEIF CKT% >= 236 AND slidecount% = 0 AND (w + 22) / 22 <> scrcnt% THEN
+        '    '    IF NOT slidecount% THEN 'Start scrolling if it isn't, already.
+        '    'w = w + 1
+        '    'vert% = vert% + 1
+        '    slidecount% = 176
+        '    jdrop = 0
+        '    CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
+        '    'END IF
+        '    'END IF
+        '    'TODO: Make the screen scroll down if Cricket hits the top!
+        'END IF
+
+        'Leftover code, for testing purposes (just in case)
+        '    FOR y = 0 TO ((_HEIGHT - 72) / 8)
+        '        FOR x = 0 TO (_WIDTH / 8)
+        '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Background1(w, z))
+        '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Background2(w, z))
+        '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Foreground1(w, z))
+        '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Foreground2(w, z))
+        '            z = z + 1
+        '        NEXT x
+        '        z = startz
+        '        w = w + 1
+        '    NEXT y
+
+        LINE (0, 55)-(639, 69), _RGB32(0, 0, 180), BF
+        LINE (0, 462)-(639, 469), _RGB32(0, 0, 180), BF
+        TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 52
+        TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 60
+        TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 350, 52
+        TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 350, 60
+        TileFont STR$(sprnum(0)) + " * " + STR$(sprpos(0)) + " AND " + STR$(sprnum(1)) + " * " + STR$(sprpos(1)), 0, 471
+    END IF
+    IF NOT mapld THEN
+        TileFont "PHRINGDOTT", 200, 80
+        DRAW "B M400, 85": Font "THE INCREDIBLY WACKY SIMULATION"
+        TileFont "GENERITICA", 10, 100
+        DRAW "B M150, 105": Font "CITY OF GENERITICA"
+        TileFont "HABOCADE", 10, 120
+        DRAW "B M120, 125": Font "HABOCADE FOREST"
+        TileFont "CRAAZANIMIO", 10, 140
+        DRAW "B M180, 145": Font "CRAAZANIMIO SWAMP"
+        TileFont "VODIARO", 10, 160
+        DRAW "B M100, 165": Font "VODIARO CEMETERY"
+        TileFont "JABADATAC", 10, 180
+        DRAW "B M160, 185": Font "DONT WORRY I CAN FIGHT BY MYSELF"
+        TileFont "BANZIKOR", 10, 200
+        DRAW "B M140, 205": Font "MOUNT BANZIKOR"
+        TileFont "MOINMOIN", 10, 220
+        DRAW "B M140, 225": Font "FREEZING COLD LAND OF ICE AND SNOW"
+        TileFont "DUMBAHOOMBA", 10, 240
+        DRAW "B M200, 245": Font "DUMBAHOOMBA POWER PLANT"
+        TileFont "WEEKYSNAZAK", 10, 260
+        DRAW "B M200, 265": Font "THE LUCID DREAM OF '80S PLATFORMERS"
+        TileFont "TRIMODEON", 10, 280
+        DRAW "B M180, 285": Font "STRAIGHT OUT OF A 1930S CARTOON"
+        TileFont "FORTHOPA", 210, 300
+        DRAW "B M320, 305": Font "8-BIT CONSOLES AREN'T DEAD!"
+        DRAW "B M235, 400": Font "CUSTOM LEVEL SELECTOR FORTHCOMING!"
+    END IF
+    _DISPLAY 'This kills out the flicker, which really helps with this.
+
+    IF mapld THEN
+        'Before we check for user key presses, do we need to scroll the screen?
+        IF slidecount% < 0 THEN 'Are we scrolling the screen downward?
+            FOR v = 0 TO 60: verrow(v) = verrow(v) + 1: NEXT v
+            slidecount% = slidecount% + 1
+            IF verrow(0) >= 0 THEN
+                FOR v = 0 TO 60: verrow(v) = verrow(v) - 8: NEXT v
+                w = w - 1 'Should become vert% = vert% - 1
+            END IF
+        ELSEIF slidecount% > 0 THEN 'Or are we scrolling the screen upward?
+            FOR v = 0 TO 60: verrow(v) = verrow(v) - 1: NEXT v
+            slidecount% = slidecount% - 1
+            IF verrow(0) <= -16 THEN
+                FOR v = 0 TO 60: verrow(v) = verrow(v) + 8: NEXT v
+                w = w + 1 'Should become vert% = vert% + 1
+            END IF
+        END IF
+    ELSE slidecount% = 0 'Automatically cancels out any vertical screen scrolling, if no map is loaded.
+    END IF
+
+    'Key trapping routine -- figure out what key was pressed, and act on it
+    kp& = _KEYHIT 'Check for keys that don't need to be held down to work
+    '********************
+    ' 19200 - LEFT arrow key
+    '********************
+    IF _KEYDOWN(19200) THEN
+        IF mapld THEN
+            IF sprnum(0) > -1 THEN 'Scroll the background (CKL% > 148)
+                FOR q = 0 TO 80 '(tsc - 1)
+                    sprpos(q) = sprpos(q) + 1
+                NEXT q
+                CKX% = CKX% - 1
+            END IF
+            IF sprpos(0) >= 0 THEN 'Do we need to reset the column positions?
+                FOR q = 0 TO 80
+                    sprpos(q) = sprpos(q) - 8 'Reset the column positions
+                    sprnum(q) = sprnum(q) - 1 'Change the displayed sprite
+                NEXT q
+            END IF
+        END IF
+    END IF
+    '*********************
+    ' 19712 - RIGHT arrow key
+    '*********************
+    IF _KEYDOWN(19712) THEN
+        IF mapld THEN
+            IF sprnum(0) >= -1 THEN 'CKL = 148
+                FOR q = 0 TO 80 '(tsc - 1)
+                    sprpos(q) = sprpos(q) - 1
+                NEXT q
+                CKX% = CKX% + 1
+            END IF
+            IF sprpos(0) <= -8 THEN 'Do we need to reset the column positions?
+                FOR q = 0 TO 80
+                    sprpos(q) = sprpos(q) + 8
+                    sprnum(q) = sprnum(q) + 1
+                NEXT q
+            END IF
+        END IF
+    END IF
+    '*********************
+    ' 18432 - UP arrow key
+    '*********************
+    IF _KEYDOWN(18432) AND slidecount% = 0 THEN IF w > 0 THEN slidecount% = -1
+
+    '******************
+    ' 20480 - DOWN arrow key
+    '******************
+    IF _KEYDOWN(20480) AND slidecount% = 0 THEN IF w + 60 < scrcnt% * 27 THEN slidecount% = 1
+
+    'ELSEIF kp& = 114 THEN 'Pressing R resets Cricket's position (DEBUG key)
+    '    CKT% = 24
+    '    CKB% = CKT% + _HEIGHT(plyr&) - 1
+    '    jdrop = 1
+    '    jump% = 0
+    'ELSEIF kp& = -120 THEN jdrop = 1 'If you let off the JUMP key early
+    'ELSEIF jdrop THEN 'If you let off the JUMP key
+    '    IF plyr& <> stand& THEN plyr& = stand&: CKB% = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
+    '    CKT% = CKT% + 1 '   This brings the player sprite back down to the
+    '    CKB% = CKB% + 1 '   platform it was on, three pixels at a time.
+    'ELSEIF _KEYDOWN(120) AND jdrop = 0 AND slidecount% = 0 THEN 'JUMP key (X for right now)
+    '    IF jump% = -2 THEN jump% = 0 'Jump off from a ladder/beanstalk.
+    '    IF jump% = 0 THEN plyr& = jump&: CKB& = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
+    '    IF jump% < 42 THEN 'Height test, instead of setting the coordinate.
+    '        notop = 0
+    '        IF CKT% <= 32 THEN 'Bugfix. If nothing's above him, he just jumps.
+    '            CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
+    '        ELSEIF CKT% > 32 THEN
+    '            FOR Head = 0 TO sn
+    '                IF LevelData(w + (PRow - 5), AboveHead(Head)) = 2 THEN
+    '                    jdrop = 1 'Stop jumping if something's above his head
+    '                    'Maybe add the sound of him hitting his head?
+    '                ELSE
+    '                    notop = notop + 1 'One of the tiles isn't a wall
+    '                END IF
+    '            NEXT Head 'Below: jump if the 3 or 4 tiles above aren't walls
+    '            IF notop > 2 THEN CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
+    '        END IF
+    '    ELSE
+    '        jump% = 0
+    '        jdrop = 1
+    '    END IF
+    '
+
+LOOP UNTIL _KEYDOWN(27) 'Press ESC to end the test. This should be replaced by an "exit" menu.
+SYSTEM
+
+LoadMap:
 'This is where I should move the loading routines into their own subroutine, like I tried with the last two versions.
 BG1$ = respath$ + "WLDXL1B1.NXT"
 BG2$ = respath$ + "WLDXL1B2.NXT"
@@ -246,361 +636,8 @@ FOR tc = 0 TO tilecnt%
     _FREEIMAGE tx&
     LINE (0, 200)-(170, 207), _RGBA32(0, 0, 0, 255), BF
 NEXT tc
+RETURN
 
-PRINT "ALL SET!"
-
-PRINT "Press ENTER to start."
-DO
-LOOP WHILE INKEY$ = ""
-
-CLS
-
-'Pre drawing routine loop routines -- setting up variables and arrays
-lives = 5
-tick = 400
-'tsc = (256 * lc%) + rc% 'Should be 511
-'DIM sprnum(0 TO (tsc - 1)) AS INTEGER
-'DIM sprpos(0 TO (tsc - 1)) AS INTEGER
-DIM sprseg(0 TO 80) AS INTEGER 'How much of each column is on-screen (in 8ths)
-DIM sprnum(0 TO 80) AS INTEGER 'Which sprites are on the screen
-DIM sprpos(0 TO 80) AS INTEGER 'The X coordinate of each column of sprites
-DIM verrow(0 TO 60) AS INTEGER 'The Y coordinate of each row of sprites
-FOR n = 0 TO 80 '(tsc - 1)
-    sprseg(n) = 8
-    sprnum(n) = (n - 1)
-    sprpos(n) = ((n - 1) * 8)
-NEXT n
-FOR n = 0 TO 60: verrow(n) = ((n - 1) * 8): NEXT n
-'sprseg(0) = 8
-'sprnum(0) = 0
-'sprpos(0) = -8
-
-'CKL% = 0 '148 'Left-most X coordinate (player)
-CKR% = CKL% + _WIDTH(plyr&) - 1 '171 'Right-most X coordinate (player)
-'CKT% = 0 '172 'Top-most Y coordinate (player)
-CKB% = CKT% + _HEIGHT(plyr&) - 1 'Bottom-most Y coordinate (player)
-CKX% = 0 'Global X coordinate, for absolute positioning on the map
-
-w = vert% 'This should work, otherwise try setting it to 131.
-
-DIM UnderFoot(0 TO 3) AS INTEGER
-DIM AboveHead(0 TO 3) AS INTEGER
-DIM InFrontOf(0 TO 4) AS INTEGER
-DIM BehindMoi(0 TO 4) AS INTEGER
-
-_TITLE "BurgerMapper: PHRINGDOTT 1"
-
-DO
-    'CLS
-    'HUD drawing (tile placing) routine
-
-    LINE (0, 0)-(639, 479), _RGB32(0, 0, 180), BF
-    LINE (0, 50)-(639, 479), _RGB32(160, 160, 160), B
-    COLOR _RGB32(255, 255, 255), _RGB32(0, 0, 180)
-    ' TODO: Make this scroll horizontally, so I can display more help information.
-    LOCATE 1, 1: PRINT "This is how the map will look, in-game. Use the arrow keys to free-scroll."
-    DRAW "B M3, 31": DrawBox 4
-    DRAW "B M68, 31": DrawBox 4
-    DRAW "B M133, 31": DrawBox 4
-    DRAW "B M198, 31": DrawBox 4
-    DRAW "B M263, 31": DrawBox 4
-    DRAW "B M328, 31": DrawBox 4
-    DRAW "B M510, 31": DrawBox 4
-    DRAW "B M575, 31": DrawBox 4
-    DRAW "B M8, 38 C" + STR$(&HFFFFFFFF): Font "EDIT MAP"
-    DRAW "B M8, 45": Font "SETTINGS"
-    DRAW "B M79, 38": Font "CHANGE"
-    DRAW "B M87, 45": Font "TILE"
-    DRAW "B M143, 38": Font "DELETE"
-    DRAW "B M151, 45": Font "TILE"
-    DRAW "B M205, 38": Font "ADD NEW"
-    DRAW "B M205, 45": Font "MONSTER"
-    DRAW "B M274, 38": Font "CHANGE"
-    DRAW "B M270, 45": Font "MONSTER"
-    DRAW "B M336, 38": Font "TRIGGER"
-    DRAW "B M336, 45": Font "OPTIONS"
-
-    DRAW "B M282, 24": Font "PHRINGDOTT 1"
-
-    DRAW "B M525,38": Font "COLL-"
-    DRAW "B M525,45": Font "ISION"
-    DRAW "B M585,38": Font "CHANGE"
-    DRAW "B M590,45": Font "LEVEL"
-
-    'Top row of the HUD
-
-    'Tile rendering routine -- draw each layer onto the screen, in sequence
-    FOR y = 0 TO 60 'Originally 28; 56 was the sweet spot, but 60 worked, too
-        FOR x = 0 TO 80 'Originally 41 (80's good, and 82 works, too)
-            'LOCATE 1, 1: PRINT "COLUMN: " + LTRIM$(STR$(w)) + "  ROW: " + LTRIM$(STR$(y)) + "  LEFTMOST: " + STR$(sprpos(0))
-            IF sprnum(x) >= 0 AND verrow(y) < 400 THEN '360/380 are pretty good. It was originally "verrow(y) < 176"
-                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background1((w - 1) + y, sprnum(x))), _CLIP PSET
-                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Background2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground1((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-                IF y > 0 AND w > -1 THEN PUT (sprpos(x), 63 + verrow(y)), tile(0, Foreground2((w - 1) + y, sprnum(x))), _CLIP PSET, _RGB32(1, 1, 1)
-            END IF
-        NEXT x
-    NEXT y
-
-    FOR clr = 0 TO 3
-        UnderFoot(clr) = 0
-        AboveHead(clr) = 0
-        InFrontOf(clr) = 0
-        BehindMoi(clr) = 0
-    NEXT clr
-    InFrontOf(4) = 0: BehindMoi(4) = 0
-    PCol = 0: PRow = 0: topright = 0: topleft = 0
-
-    'This is how we find out which sprite Cricket is next to/on top of/under.
-    SELECT CASE (CKB% + 1) 'Start by finding the row that Cricket's above.
-        'TODO: MAKE SOMETHING MORE EFFICIENT THAN THIS!!!
-        CASE IS < 71
-            PRow = 0
-        CASE IS < 79
-            PRow = 1
-        CASE IS < 87
-            PRow = 2
-        CASE IS < 95
-            PRow = 3
-        CASE IS < 103
-            PRow = 4
-        CASE IS < 111
-            PRow = 5
-        CASE IS < 119
-            PRow = 6
-        CASE IS < 127
-            PRow = 7
-        CASE IS < 135
-            PRow = 8
-        CASE IS < 143
-            PRow = 9
-        CASE IS < 151
-            PRow = 10
-        CASE IS < 159
-            PRow = 11
-        CASE IS < 167
-            PRow = 12
-        CASE IS < 175
-            PRow = 13
-        CASE IS < 183
-            PRow = 14
-        CASE IS < 191
-            PRow = 15
-        CASE IS < 199
-            PRow = 16
-        CASE IS < 207
-            PRow = 17
-        CASE IS < 215
-            PRow = 18
-        CASE IS < 223
-            PRow = 19
-        CASE IS < 231
-            PRow = 20
-        CASE IS < 239
-            PRow = 21
-    END SELECT
-    'And now, for a more efficient routine: what column are we on?
-    FOR gx = 0 TO CKX%
-        IF gx MOD 8 = 0 THEN PCol = PCol + 1
-    NEXT gx
-    sn = 0 'For safety purposes, and, well... just because. xD
-    UnderFoot(0) = (PCol - 1)
-    AboveHead(0) = (PCol - 1)
-    'Now that we know exactly what sprite the bottom-leftmost pixel that makes
-    'up Cricket is on, let's see if he's standing on three, or four tiles.
-    FOR ldir = 0 TO 22 '23 other pixels, counting the one it starts on.
-        IF (CKX% + (ldir + 1)) MOD 8 = 0 THEN 'If it divides evenly into 8...
-            UnderFoot(sn + 1) = UnderFoot(sn) + 1 'Make the next tile in both
-            AboveHead(sn + 1) = AboveHead(sn) + 1 'sets one more than before
-            sn = sn + 1
-        END IF
-    NEXT ldir
-
-    'And with a routine that's somewhat efficient, what's on each side?
-    so = 0
-    InFrontOf(0) = PRow - 4
-    BehindMoi(0) = PRow - 4
-    FOR side = 0 TO 30 '31 other pixels, counting the one it starts on.
-        IF (CKT% + (side + 1)) MOD 8 = 0 THEN 'If it divides evenly into 8...
-            InFrontOf(so + 1) = InFrontOf(so) + 1 'Make the next tile in both
-            BehindMoi(so + 1) = BehindMoi(so) + 1 'sets one more than before
-            so = so + 1
-        END IF
-    NEXT side
-    topright = AboveHead(2) + 1
-    topleft = AboveHead(0)
-
-    'Now, we see what kinds of tiles the sprites under Cricket are. If any of
-    'them match the types mentioned below, Cricket will stop falling.
-    'IF oco THEN oco = 0
-    'IF jump% = 0 THEN jdrop = 1
-    'FOR Foot = 0 TO (sn - 1) 'The number of sprites below Cricket's feet
-    '    IF LevelData(w + PRow, UnderFoot(Foot)) = 1 THEN 'Platform
-    '        'IF jump% = -2 THEN oco = oco + 1 ELSE
-    '        jdrop = 0: jump% = 0
-    '    ELSEIF LevelData(w + PRow, UnderFoot(Foot)) = 2 THEN 'Wall
-    '        'IF jump% = -2 THEN oco = oco + 1 ELSE
-    '        jdrop = 0: jump% = 0
-    '    END IF
-    '    IF jump% = -2 AND LevelData(w + PRow, UnderFoot(Foot)) <> 3 THEN
-    '        oco = oco + 1 'Also check to see if Cricket's climbing something
-    '    END IF
-    '    IF oco > 2 THEN jump% = 0: jdrop = 1 'If he isn't, make him fall
-    'NEXT Foot
-
-    'Quick check: did Cricket jump or fall off the screen?
-    'IF CKT% >= 241 AND slidecount% = 0 AND (w + 22) / 22 = scrcnt% THEN 'Check his coordinates
-    '    'IF (w + 22) / 22 = scrcnt% THEN 'Bottom screen? That's a death.
-    '    jdrop = 0 'Stop him from falling
-    '    jump% = -1 'Reset the height counter
-    '    'IF _SNDPLAYING(bgm&) THEN _SNDSTOP bgm& 'Stop the background music
-    '    '_SNDPLAY SEF(3) 'Play the death sound
-    '    CKT% = 240: CKB% = (CKT% + _HEIGHT(plyr&) - 1) 'Move Cricket, so the sound only plays once
-    '    IF lives > 0 THEN lives = lives - 1 'Take away a life
-    '    'At some point, the game will jump to the "try again?" screen.
-    '    'For now, all you have to do is press "R" to revive Cricket.
-    'ELSEIF CKT% >= 236 AND slidecount% = 0 AND (w + 22) / 22 <> scrcnt% THEN
-    '    '    IF NOT slidecount% THEN 'Start scrolling if it isn't, already.
-    '    'w = w + 1
-    '    'vert% = vert% + 1
-    '    slidecount% = 176
-    '    jdrop = 0
-    '    CKT% = CKT% - 1: CKB% = (CKT% + _HEIGHT(plyr&) - 1)
-    '    'END IF
-    '    'END IF
-    '    'TODO: Make the screen scroll down if Cricket hits the top!
-    'END IF
-
-    'Leftover code, for testing purposes (just in case)
-    '    FOR y = 0 TO ((_HEIGHT - 72) / 8)
-    '        FOR x = 0 TO (_WIDTH / 8)
-    '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Background1(w, z))
-    '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Background2(w, z))
-    '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Foreground1(w, z))
-    '            _PUTIMAGE (x * 8, 44 + (y * 8)), tile(Foreground2(w, z))
-    '            z = z + 1
-    '        NEXT x
-    '        z = startz
-    '        w = w + 1
-    '    NEXT y
-
-    LINE (0, 55)-(639, 69), _RGB32(0, 0, 180), BF
-    LINE (0, 462)-(639, 469), _RGB32(0, 0, 180), BF
-    TileFont "U " + STR$(CKT%) + " L " + STR$(CKL%) + " JUMP " + LTRIM$(STR$(jdrop)) + " * " + STR$(jump%) + " TOP ROW " + STR$(verrow(0)), 0, 52
-    TileFont "D " + STR$(CKB%) + " R " + STR$(CKR%) + " GLOBAL X POS " + STR$(CKX%), 0, 60
-    TileFont "ABOVE" + STR$(sn) + " TILES  " + STR$(UnderFoot(0)) + " " + STR$(UnderFoot(1)) + " " + STR$(UnderFoot(2)) + " " + STR$(UnderFoot(3)), 350, 52
-    TileFont "ON BOTH SIDES  " + STR$(InFrontOf(0)) + " " + STR$(InFrontOf(1)) + " " + STR$(InFrontOf(2)) + " " + STR$(InFrontOf(3)) + " " + STR$(InFrontOf(4)), 350, 60
-    TileFont STR$(sprnum(0)) + " * " + STR$(sprpos(0)) + " AND " + STR$(sprnum(1)) + " * " + STR$(sprpos(1)), 0, 471
-    _DISPLAY 'This kills out the flicker, which really helps with this.
-
-    'Before we check for user key presses, do we need to scroll the screen?
-    IF slidecount% < 0 THEN 'Are we scrolling the screen downward?
-        FOR v = 0 TO 60: verrow(v) = verrow(v) + 1: NEXT v
-        slidecount% = slidecount% + 1
-        IF verrow(0) >= 0 THEN
-            FOR v = 0 TO 60: verrow(v) = verrow(v) - 8: NEXT v
-            w = w - 1 'Should become vert% = vert% - 1
-        END IF
-    ELSEIF slidecount% > 0 THEN 'Or are we scrolling the screen upward?
-        FOR v = 0 TO 60: verrow(v) = verrow(v) - 1: NEXT v
-        slidecount% = slidecount% - 1
-        IF verrow(0) <= -16 THEN
-            FOR v = 0 TO 60: verrow(v) = verrow(v) + 8: NEXT v
-            w = w + 1 'Should become vert% = vert% + 1
-        END IF
-    END IF
-
-    'Key trapping routine -- figure out what key was pressed, and act on it
-    kp& = _KEYHIT 'Check for keys that don't need to be held down to work
-    '********************
-    ' 19200 - LEFT arrow key
-    '********************
-    IF _KEYDOWN(19200) THEN
-        IF sprnum(0) > -1 THEN 'Scroll the background (CKL% > 148)
-            FOR q = 0 TO 80 '(tsc - 1)
-                sprpos(q) = sprpos(q) + 1
-            NEXT q
-            CKX% = CKX% - 1
-        END IF
-        IF sprpos(0) >= 0 THEN 'Do we need to reset the column positions?
-            FOR q = 0 TO 80
-                sprpos(q) = sprpos(q) - 8 'Reset the column positions
-                sprnum(q) = sprnum(q) - 1 'Change the displayed sprite
-            NEXT q
-        END IF
-        '*********************
-        ' 19712 - RIGHT arrow key
-        '*********************
-    ELSEIF _KEYDOWN(19712) THEN
-        IF sprnum(0) >= -1 THEN 'CKL = 148
-            FOR q = 0 TO 80 '(tsc - 1)
-                sprpos(q) = sprpos(q) - 1
-            NEXT q
-            CKX% = CKX% + 1
-        END IF
-        IF sprpos(0) <= -8 THEN 'Do we need to reset the column positions?
-            FOR q = 0 TO 80
-                sprpos(q) = sprpos(q) + 8
-                sprnum(q) = sprnum(q) + 1
-            NEXT q
-        END IF
-        '*********************
-        ' 18432 - UP arrow key
-        '*********************
-    ELSEIF _KEYDOWN(18432) AND slidecount% = 0 THEN
-        IF w > 0 THEN slidecount% = -1
-        '******************
-        ' 20480 - DOWN arrow key
-        '******************
-    ELSEIF _KEYDOWN(20480) AND slidecount% = 0 THEN
-        IF verrow(59) < (scrcnt% * 27) * 8 THEN slidecount% = 1
-
-        'ELSEIF kp& = 114 THEN 'Pressing R resets Cricket's position (DEBUG key)
-        '    CKT% = 24
-        '    CKB% = CKT% + _HEIGHT(plyr&) - 1
-        '    jdrop = 1
-        '    jump% = 0
-        'ELSEIF kp& = -120 THEN jdrop = 1 'If you let off the JUMP key early
-        'ELSEIF jdrop THEN 'If you let off the JUMP key
-        '    IF plyr& <> stand& THEN plyr& = stand&: CKB% = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
-        '    CKT% = CKT% + 1 '   This brings the player sprite back down to the
-        '    CKB% = CKB% + 1 '   platform it was on, three pixels at a time.
-        'ELSEIF _KEYDOWN(120) AND jdrop = 0 AND slidecount% = 0 THEN 'JUMP key (X for right now)
-        '    IF jump% = -2 THEN jump% = 0 'Jump off from a ladder/beanstalk.
-        '    IF jump% = 0 THEN plyr& = jump&: CKB& = CKT% + _HEIGHT(plyr&) - 1: CKR% = CKL% + _WIDTH(plyr&) - 1
-        '    IF jump% < 42 THEN 'Height test, instead of setting the coordinate.
-        '        notop = 0
-        '        IF CKT% <= 32 THEN 'Bugfix. If nothing's above him, he just jumps.
-        '            CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '        ELSEIF CKT% > 32 THEN
-        '            FOR Head = 0 TO sn
-        '                IF LevelData(w + (PRow - 5), AboveHead(Head)) = 2 THEN
-        '                    jdrop = 1 'Stop jumping if something's above his head
-        '                    'Maybe add the sound of him hitting his head?
-        '                ELSE
-        '                    notop = notop + 1 'One of the tiles isn't a wall
-        '                END IF
-        '            NEXT Head 'Below: jump if the 3 or 4 tiles above aren't walls
-        '            IF notop > 2 THEN CKT% = CKT% - 1: CKB% = CKB% - 1: jump% = jump% + 1
-        '        END IF
-        '    ELSE
-        '        jump% = 0
-        '        jdrop = 1
-        '    END IF
-        '
-    ELSEIF kp& = 43 THEN 'The PLUS (+) key scrolls the screen down (DEBUG)
-        IF w < startw THEN
-            'w = w + 1
-            slidecount% = 176
-        END IF
-    ELSEIF kp& = 45 THEN 'The MINUS (-) key scrolls the screen up (DEBUG)
-        IF w > 0 THEN
-            'w = w - 1
-            slidecount% = -176
-        END IF
-
-    END IF
-LOOP UNTIL _KEYDOWN(27) 'Press ESC to end the test.
 
 'The FONT subcommand will have to be reworked, to use a tile-based font.
 SUB TileFont (Word$, StartX%, StartY%)
