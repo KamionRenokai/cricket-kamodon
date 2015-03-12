@@ -2417,11 +2417,11 @@ END IF
 '********************
 ' Pause
 '********************
-IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN
-    IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN GOSUB PauseGame
+IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN '"bh = 1" means "ignore the pause button/stick until the player lets go"
+    IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN bh = 1: GOSUB PauseGame
 ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN
-    IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN GOSUB PauseGame
-ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN GOSUB PauseGame
+    IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN bh = 1: GOSUB PauseGame
+ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN bh = 1: GOSUB PauseGame
 END IF
 
 '********************
@@ -2473,7 +2473,7 @@ END IF
 ' Attack (by itself)
 '********************
 IF JoyMoveOp(6) > 0 AND MoveAttack < 128 THEN
-    IF STICK(ActionAttack, JoyMoveOp(6)) < MoveAttack THEN
+    IF STICK(ActionAttack, JoyMoveOp(6)) < MoveAttack THEN 'If you attack while you're moving, do this...
         IF JoyMoveOp(2) > 0 AND MoveLeft < 128 THEN
             IF STICK(ActionLeft, JoyMoveOp(2)) < MoveLeft THEN ma = 1
         ELSEIF JoyMoveOp(2) > 0 AND MoveLeft > 128 THEN
@@ -2490,7 +2490,7 @@ IF JoyMoveOp(6) > 0 AND MoveAttack < 128 THEN
         ma = 0
     END IF
 ELSEIF JoyMoveOp(6) > 0 AND MoveAttack > 128 THEN
-    IF STICK(ActionAttack, JoyMoveOp(6)) > MoveAttack THEN
+    IF STICK(ActionAttack, JoyMoveOp(6)) > MoveAttack THEN 'If you attack while you're moving, do this...
         IF JoyMoveOp(2) > 0 AND MoveLeft < 128 THEN
             IF STICK(ActionLeft, JoyMoveOp(2)) < MoveLeft THEN ma = 1
         ELSEIF JoyMoveOp(2) > 0 AND MoveLeft > 128 THEN
@@ -2506,7 +2506,7 @@ ELSEIF JoyMoveOp(6) > 0 AND MoveAttack > 128 THEN
         IF ma THEN _SNDPLAY SEF(18) ELSE IF atk = -1 THEN atk = 0: last& = plyr&
         ma = 0
     END IF
-ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) THEN
+ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) THEN 'If you attack while you're moving, do this...
     IF JoyMoveOp(2) > 0 AND MoveLeft < 128 THEN
         IF STICK(ActionLeft, JoyMoveOp(2)) < MoveLeft THEN ma = 1
     ELSEIF JoyMoveOp(2) > 0 AND MoveLeft > 128 THEN
@@ -2666,11 +2666,20 @@ IF jump% > 0 THEN jdrop = 1
 RETURN
 
 PauseGame:
+'Map the "pause" feature to a thumbstick, and try that, too!
+'IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN 'Joystick: all the way to one axis
+'    IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN bh = 1 'Button/thumbstick held
+'ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN 'Joystick: all the way to the other axis
+'    IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN bh = 1
+'ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN bh = 1 'Gamepad: if it's mapped to a button, instead
+'END IF 'It will skip this entire routine if you're using the keyboard, instead.
+
+'Pause the music if there's a song playing, then play the Pause sound, and dim the screen
 IF actbgm% >= 0 AND bgm& THEN _SNDPAUSE bgm&
 _SNDPLAY SEF(13)
 LINE (0, 0)-(320, 240), _RGBA32(0, 0, 0, 140), BF
-ps& = _COPYIMAGE(0)
-DRAW "C" + STR$(&HFFFFFFFF)
+ps& = _COPYIMAGE(0) 'Take a picture of the slightly-dimmed screen, so we can redraw it more easily, later
+DRAW "C" + STR$(&HFFFFFFFF) 'Change the drawing color to white, with full opacity
 _DISPLAY
 
 LET Flicker = 1
@@ -2686,7 +2695,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         IF Flicker = 0 THEN mp = 0
 
         IF Sector = 0 THEN 'The main pause menu.
-            DRAW "C" + STR$(&HFFFFFFFF)
+            DRAW "C" + STR$(&HFFFFFFFF) 'This changes what the "unpause" command says, depending on the controller.
             IF cont% = 0 THEN CenterFont "PRESS ''" + ButtonDef$(MovePause) + "'' AGAIN TO UNPAUSE", 85
             IF cont% > 0 AND JoyMoveOp(7) > 0 THEN
                 CenterFont "PUSH THAT THUMBSTICK THAT WAY AGAIN TO UNPAUSE", 85
@@ -2733,7 +2742,7 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
 
         END IF
 
-        'First row is the main pause menu.
+        'First row is the main pause menu. "Flicker * 15" plays with the opacity, giving the "flicker" effect.
         IF Selector = 1 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (Flicker * 15))): CenterFont "UNPAUSE", 105
         'Initially skipping "LOAD" and "SAVE" for the prototype only.
         IF Selector = 2 THEN DRAW "C" + STR$(_RGBA32(0, 178, 0, (Flicker * 15))): CenterFont "CONTROLS", 135
@@ -2781,184 +2790,224 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
                 GOSUB PMExec 'This is so I don't have to duplicate this routine, for when you're using a gamepad.
                 IF bak THEN bak = 0: EXIT DO 'In place of the "EXIT DO" commands from the SELECT CASE routine.
             CASE 27 'ESC
-                IF Sector = 0 THEN 'From the main pause menu
+                IF Sector = 0 THEN 'If you hit ESC while in the pause menu, you'll go back to the game.
                     _SNDPLAY SEF(1)
                     EXIT DO
-                ELSEIF Sector = 3 THEN 'From the "ESC" menu
+                ELSEIF Sector = 3 THEN 'Hit ESC from the "ESC" menu, and you'll go back to the game.
                     _SNDPLAY SEF(1)
                     Sector = 0
                     Selector = 1
                     EXIT DO
-                ELSEIF Sector = 2 THEN 'From the "exit to menu" menu
+                ELSEIF Sector = 2 THEN 'Hit ESC from the "exit to menu" menu to go back to the main pause menu.
                     _SNDPLAY SEF(1)
                     _PUTIMAGE (0, 0)-(319, 239), ps&, small
                     IF RecSpot = 0 THEN Sector = 0: Selector = 4
                     IF RecSpot = 1 THEN Sector = 3: Selector = 18
                     IF RecSpot = 2 THEN Sector = 3: Selector = 19
                     RecSpot = 0
-                ELSEIF Sector = 1 THEN 'From the "controls" menu
+                ELSEIF Sector = 1 THEN 'Hit ESC from the "controls" menu to go back to the main pause menu.
                     _SNDPLAY SEF(1)
                     _PUTIMAGE (0, 0)-(319, 239), ps&, small
                     Sector = 0
                     Selector = 2
                 END IF
-            CASE MovePause 'Press the PAUSE key again
+            CASE MovePause 'Press the PAUSE key again to exit the pause menu, and return to the game.
                 IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix: hitting Pause from the ESC menu bugs the Pause menu
                 EXIT DO
         END SELECT
     ELSEIF cont% > 0 THEN 'And you get these more complicated, repetitive statements if you're using a gamepad.
-        IF JoyMoveOp(0) > 0 AND MoveUp < 128 THEN
-            IF STICK(ActionUp, JoyMoveOp(0)) < MoveUp THEN
-                Selector = Selector - 1
+        'BUT FIRST... THIS! ... Is the pause button/stick still being held down/to one side? (bugfix 1 of 3)
+        IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN
+            IF STICK(ActionPause, JoyMoveOp(7)) > MovePause AND bh = 1 THEN bh = 0
+        ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN
+            IF STICK(ActionPause, JoyMoveOp(7)) < MovePause AND bh = 1 THEN bh = 0
+        ELSEIF JoyMoveOp(7) = 0 AND bh = 1 AND NOT STRIG(MovePause, ActionPause) THEN bh = 0
+        END IF
+
+        IF JoyMoveOp(0) > 0 AND MoveUp < 128 THEN 'Pressing the Up button or thumbstick
+            IF STICK(ActionUp, JoyMoveOp(0)) < MoveUp AND up = 0 THEN
+                Selector = Selector - 1: up = 1
                 IF Sector = 0 THEN IF Selector = 0 THEN Selector = 4
                 IF Sector = 1 THEN IF Selector = 4 THEN Selector = 14
                 IF Sector = 2 THEN IF Selector = 14 THEN Selector = 16
                 IF Sector = 3 THEN IF Selector = 16 THEN Selector = 19
             END IF
         ELSEIF JoyMoveOp(0) > 0 AND MoveUp > 128 THEN
-            IF STICK(ActionUp, JoyMoveOp(0)) > MoveUp THEN
-                Selector = Selector - 1
+            IF STICK(ActionUp, JoyMoveOp(0)) > MoveUp AND up = 0 THEN
+                Selector = Selector - 1: up = 1
                 IF Sector = 0 THEN IF Selector = 0 THEN Selector = 4
                 IF Sector = 1 THEN IF Selector = 4 THEN Selector = 14
                 IF Sector = 2 THEN IF Selector = 14 THEN Selector = 16
                 IF Sector = 3 THEN IF Selector = 16 THEN Selector = 19
             END IF
-        ELSEIF JoyMoveOp(0) = 0 AND STRIG(MoveUp, ActionUp) THEN
-            Selector = Selector - 1
+        ELSEIF JoyMoveOp(0) = 0 AND STRIG(MoveUp, ActionUp) AND up = 0 THEN
+            Selector = Selector - 1: up = 1
             IF Sector = 0 THEN IF Selector = 0 THEN Selector = 4
             IF Sector = 1 THEN IF Selector = 4 THEN Selector = 14
             IF Sector = 2 THEN IF Selector = 14 THEN Selector = 16
             IF Sector = 3 THEN IF Selector = 16 THEN Selector = 19
         END IF
 
-        IF JoyMoveOp(1) > 0 AND MoveDown < 128 THEN
-            IF STICK(ActionDown, JoyMoveOp(1)) < MoveDown THEN
-                Selector = Selector + 1
+        IF JoyMoveOp(1) > 0 AND MoveDown < 128 THEN 'Pressing the Down button or thumbstick
+            IF STICK(ActionDown, JoyMoveOp(1)) < MoveDown AND dp = 0 THEN
+                Selector = Selector + 1: dp = 1
                 IF Sector = 0 THEN IF Selector = 5 THEN Selector = 1
                 IF Sector = 1 THEN IF Selector = 15 THEN Selector = 5
                 IF Sector = 2 THEN IF Selector = 17 THEN Selector = 15
                 IF Sector = 3 THEN IF Selector = 20 THEN Selector = 17
             END IF
         ELSEIF JoyMoveOp(1) > 0 AND MoveDown > 128 THEN
-            IF STICK(ActionDown, JoyMoveOp(1)) > MoveDown THEN
-                Selector = Selector + 1
+            IF STICK(ActionDown, JoyMoveOp(1)) > MoveDown AND dp = 0 THEN
+                Selector = Selector + 1: dp = 1
                 IF Sector = 0 THEN IF Selector = 5 THEN Selector = 1
                 IF Sector = 1 THEN IF Selector = 15 THEN Selector = 5
                 IF Sector = 2 THEN IF Selector = 17 THEN Selector = 15
                 IF Sector = 3 THEN IF Selector = 20 THEN Selector = 17
             END IF
-        ELSEIF JoyMoveOp(1) = 0 AND STRIG(MoveDown, ActionDown) THEN
-            Selector = Selector + 1
+        ELSEIF JoyMoveOp(1) = 0 AND STRIG(MoveDown, ActionDown) AND dp = 0 THEN
+            Selector = Selector + 1: dp = 1
             IF Sector = 0 THEN IF Selector = 5 THEN Selector = 1
             IF Sector = 1 THEN IF Selector = 15 THEN Selector = 5
             IF Sector = 2 THEN IF Selector = 17 THEN Selector = 15
             IF Sector = 3 THEN IF Selector = 20 THEN Selector = 17
         END IF
 
-        IF JoyMoveOp(5) > 0 AND MoveJump < 128 THEN
-            IF STICK(ActionJump, JoyMoveOp(5)) < MoveJump THEN GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
+        IF JoyMoveOp(5) > 0 AND MoveJump < 128 THEN 'Pressing the Jump button or thumbstick, which acts as "confirm"
+            IF STICK(ActionJump, JoyMoveOp(5)) < MoveJump AND jp = 0 THEN jp = 1: GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
         ELSEIF JoyMoveOp(5) > 0 AND MoveJump > 128 THEN
-            IF STICK(ActionJump, JoyMoveOp(5)) > MoveJump THEN GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
-        ELSEIF JoyMoveOp(5) = 0 AND STRIG(MoveJump, ActionJump) THEN GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
+            IF STICK(ActionJump, JoyMoveOp(5)) > MoveJump AND jp = 0 THEN jp = 1: GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
+        ELSEIF JoyMoveOp(5) = 0 AND STRIG(MoveJump, ActionJump) AND jp = 0 THEN jp = 1: GOSUB PMExec: IF bak THEN bak = 0: EXIT DO
         END IF
 
         IF JoyMoveOp(6) > 0 AND MoveAttack < 128 THEN 'Get ready; this is about to get REALLY repetitive.
-            IF STICK(ActionAttack, JoyMoveOp(6)) < MoveAttack THEN
+            IF STICK(ActionAttack, JoyMoveOp(6)) < MoveAttack AND ap = 0 THEN 'The Attack button/stick is "cancel"
+                IF Sector = 0 THEN 'Press "attack" from the main pause menu to go back to the game.
+                    _SNDPLAY SEF(1): ap = 1
+                    EXIT DO
+                ELSEIF Sector = 3 THEN 'Press "attack" from the "ESC" menu to go back to the game.
+                    _SNDPLAY SEF(1): ap = 1
+                    Sector = 0
+                    Selector = 1
+                    EXIT DO
+                ELSEIF Sector = 2 THEN 'Press "attack" from the "exit to menu" menu to go back to the main pause menu.
+                    _SNDPLAY SEF(1): ap = 1
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
+                    IF RecSpot = 0 THEN Sector = 0: Selector = 4
+                    IF RecSpot = 1 THEN Sector = 3: Selector = 18
+                    IF RecSpot = 2 THEN Sector = 3: Selector = 19
+                    RecSpot = 0
+                ELSEIF Sector = 1 THEN 'Press "attack" from the "controls" menu to go back to the main pause menu.
+                    _SNDPLAY SEF(1): ap = 1
+                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
+                    Sector = 0
+                    Selector = 2
+                END IF
+            END IF
+        ELSEIF JoyMoveOp(6) > 0 AND MoveAttack > 128 THEN 'Same as above, except toward the other axis.
+            IF STICK(ActionAttack, JoyMoveOp(6)) > MoveAttack AND ap = 0 THEN
                 IF Sector = 0 THEN 'From the main pause menu
-                    _SNDPLAY SEF(1)
+                    _SNDPLAY SEF(1): ap = 1
                     EXIT DO
                 ELSEIF Sector = 3 THEN 'From the "ESC" menu
-                    _SNDPLAY SEF(1)
+                    _SNDPLAY SEF(1): ap = 1
                     Sector = 0
                     Selector = 1
                     EXIT DO
                 ELSEIF Sector = 2 THEN 'From the "exit to menu" menu
-                    _SNDPLAY SEF(1)
+                    _SNDPLAY SEF(1): ap = 1
                     _PUTIMAGE (0, 0)-(319, 239), ps&, small
                     IF RecSpot = 0 THEN Sector = 0: Selector = 4
                     IF RecSpot = 1 THEN Sector = 3: Selector = 18
                     IF RecSpot = 2 THEN Sector = 3: Selector = 19
                     RecSpot = 0
                 ELSEIF Sector = 1 THEN 'From the "controls" menu
-                    _SNDPLAY SEF(1)
+                    _SNDPLAY SEF(1): ap = 1
                     _PUTIMAGE (0, 0)-(319, 239), ps&, small
                     Sector = 0
                     Selector = 2
                 END IF
             END IF
-        ELSEIF JoyMoveOp(6) > 0 AND MoveAttack > 128 THEN
-            IF STICK(ActionAttack, JoyMoveOp(6)) > MoveAttack THEN
-                IF Sector = 0 THEN 'From the main pause menu
-                    _SNDPLAY SEF(1)
-                    EXIT DO
-                ELSEIF Sector = 3 THEN 'From the "ESC" menu
-                    _SNDPLAY SEF(1)
-                    Sector = 0
-                    Selector = 1
-                    EXIT DO
-                ELSEIF Sector = 2 THEN 'From the "exit to menu" menu
-                    _SNDPLAY SEF(1)
-                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
-                    IF RecSpot = 0 THEN Sector = 0: Selector = 4
-                    IF RecSpot = 1 THEN Sector = 3: Selector = 18
-                    IF RecSpot = 2 THEN Sector = 3: Selector = 19
-                    RecSpot = 0
-                ELSEIF Sector = 1 THEN 'From the "controls" menu
-                    _SNDPLAY SEF(1)
-                    _PUTIMAGE (0, 0)-(319, 239), ps&, small
-                    Sector = 0
-                    Selector = 2
-                END IF
-            END IF
-        ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) THEN
+        ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) AND ap = 0 THEN 'If "attack" is mapped to a button
             IF Sector = 0 THEN 'From the main pause menu
-                _SNDPLAY SEF(1)
+                _SNDPLAY SEF(1): ap = 1
                 EXIT DO
             ELSEIF Sector = 3 THEN 'From the "ESC" menu
-                _SNDPLAY SEF(1)
+                _SNDPLAY SEF(1): ap = 1
                 Sector = 0
                 Selector = 1
                 EXIT DO
             ELSEIF Sector = 2 THEN 'From the "exit to menu" menu
-                _SNDPLAY SEF(1)
+                _SNDPLAY SEF(1): ap = 1
                 _PUTIMAGE (0, 0)-(319, 239), ps&, small
                 IF RecSpot = 0 THEN Sector = 0: Selector = 4
                 IF RecSpot = 1 THEN Sector = 3: Selector = 18
                 IF RecSpot = 2 THEN Sector = 3: Selector = 19
                 RecSpot = 0
             ELSEIF Sector = 1 THEN 'From the "controls" menu
-                _SNDPLAY SEF(1)
+                _SNDPLAY SEF(1): ap = 1
                 _PUTIMAGE (0, 0)-(319, 239), ps&, small
                 Sector = 0
                 Selector = 2
             END IF
         END IF
 
+        'The pause button or thumbstick was triggered... let's remember to reset the pause menu, before we unpause
+        '"bh = 0" is a bugfix, so you don't get the constant pause/unpause, like a "slow motion" mode.
         IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN
-            IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN
+            IF STICK(ActionPause, JoyMoveOp(7)) < MovePause AND bh = 0 THEN
                 IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
                 EXIT DO
             END IF
         ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN
-            IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN
+            IF STICK(ActionPause, JoyMoveOp(7)) > MovePause AND bh = 0 THEN
                 IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
                 EXIT DO
             END IF
-        ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN
+        ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) AND bh = 0 THEN
             IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
             EXIT DO
+        END IF
+
+        'Now, to make sure the other buttons/thumbsticks aren't still being held... (we already checked "pause")
+        IF JoyMoveOp(0) > 0 AND MoveUp < 128 THEN
+            IF STICK(ActionUp, JoyMoveOp(0)) > MoveUp AND up = 1 THEN up = 0
+        ELSEIF JoyMoveOp(0) > 0 AND MoveUp > 128 THEN
+            IF STICK(ActionUp, JoyMoveOp(0)) < MoveUp AND up = 1 THEN up = 0
+        ELSEIF JoyMoveOp(0) = 0 AND up = 1 AND NOT STRIG(MoveUp, ActionUp) THEN up = 0
+        END IF
+
+        IF JoyMoveOp(1) > 0 AND MoveDown < 128 THEN
+            IF STICK(ActionDown, JoyMoveOp(1)) > MoveDown AND dp = 1 THEN dp = 0
+        ELSEIF JoyMoveOp(1) > 0 AND MoveDown > 128 THEN
+            IF STICK(ActionDown, JoyMoveOp(1)) < MoveDown AND dp = 1 THEN dp = 0
+        ELSEIF JoyMoveOp(1) = 0 AND dp = 1 AND NOT STRIG(MoveDown, ActionDown) THEN dp = 0
+        END IF
+
+        IF JoyMoveOp(5) > 0 AND MoveJump < 128 THEN
+            IF STICK(ActionJump, JoyMoveOp(5)) > MoveJump AND jp = 1 THEN jp = 0
+        ELSEIF JoyMoveOp(5) > 0 AND MoveJump > 128 THEN
+            IF STICK(ActionJump, JoyMoveOp(5)) < MoveJump AND jp = 1 THEN jp = 0
+        ELSEIF JoyMoveOp(5) = 0 AND jp = 1 AND NOT STRIG(MoveJump, ActionJump) THEN jp = 0
+        END IF
+
+        IF JoyMoveOp(6) > 0 AND MoveAttack < 128 THEN
+            IF STICK(ActionAttack, JoyMoveOp(6)) < MoveAttack AND ap = 1 THEN ap = 0
+        ELSEIF JoyMoveOp(6) > 0 AND MoveAttack > 128 THEN
+            IF STICK(ActionAttack, JoyMoveOp(6)) > MoveAttack AND ap = 1 THEN ap = 0
+        ELSEIF JoyMoveOp(6) = 0 AND ap = 1 AND NOT STRIG(MoveAttack, ActionAttack) THEN ap = 0
         END IF
 
     END IF
 LOOP
 
-_FREEIMAGE ps&
-IF actbgm% >= 0 THEN IF _SNDPAUSED(bgm&) THEN _SNDPLAY bgm& ELSE _SNDLOOP bgm&
-IF jump% > 0 THEN jdrop = 1
+'When we get knocked out of that loop (or in layman's terms, exit that menu), we get ready to unpause the game.
+_FREEIMAGE ps& 'Get rid of the dimmed screen image; we don't need it anymore.
+IF actbgm% >= 0 THEN IF _SNDPAUSED(bgm&) THEN _SNDPLAY bgm& ELSE _SNDLOOP bgm& 'Unpause the background music
+IF jump% > 0 THEN jdrop = 1 'If Cricket was in midair, remind him that he needs to fall
 RETURN
 
 '*********************************************************
-' Momentary change for this build... the new movement subroutines for the gamepad routine code!
+' And now, for something I'm personally pleased with... the movement subroutines for the gamepad routine code!
 LeftMove:
 'Check for collisions, before we decide if we can move, or not
 IF (vert% + PRow) > 0 THEN
