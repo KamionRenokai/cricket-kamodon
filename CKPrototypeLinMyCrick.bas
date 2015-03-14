@@ -1750,13 +1750,36 @@ DO
     IF cont% = 0 THEN GOSUB KeyCtrlCheck ELSE GOSUB JoyCtrlCheck
 
     'When the player lets go of the left or right movement key, Cricket will stop, and reset to the "standing" frame.
+    IF cont% > 0 THEN lrc = 0 'For the gamepad version, if this number hits 2, the player isn't moving left or right.
     IF cont% = 0 AND kp& = MoveLeft - (MoveLeft * 2) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
     IF cont% = 0 AND kp& = MoveRight - (MoveRight * 2) THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
+    IF cont% > 0 THEN 'For gamepad mode, we check both the left and right buttons or thumbsticks.
+        IF JoyMoveOp(2) > 0 AND MoveLeft < 128 THEN 'Left button/thumbstick first...
+            IF STICK(ActionLeft, JoyMoveOp(2)) > MoveLeft THEN lrc = lrc + 1
+        ELSEIF JoyMoveOp(2) > 0 AND MoveLeft > 128 THEN
+            IF STICK(ActionLeft, JoyMoveOp(2)) < MoveLeft THEN lrc = lrc + 1
+        ELSEIF JoyMoveOp(2) = 0 THEN 'If mapped to a button, was it pressed before, but not currently held down?
+            IF STRIG((MoveLeft - 1), ActionLeft) AND NOT STRIG(MoveLeft, ActionLeft) THEN lrc = lrc + 1
+        END IF
+
+        IF JoyMoveOp(3) > 0 AND MoveRight < 128 THEN 'Then the right button/thumbstick.
+            IF STICK(ActionRight, JoyMoveOp(3)) > MoveRight THEN lrc = lrc + 1
+        ELSEIF JoyMoveOp(3) > 0 AND MoveRight > 128 THEN
+            IF STICK(ActionRight, JoyMoveOp(3)) < MoveRight THEN lrc = lrc + 1
+        ELSEIF JoyMoveOp(3) = 0 THEN 'If mapped to a button, was it pressed before, but not currently held down?
+            IF STRIG((MoveRight - 1), ActionRight) AND NOT STRIG(MoveRight, ActionRight) THEN lrc = lrc + 1
+        END IF
+
+        'Now for the grand finale! If "lrc" equals anything below 2, don't do it. If it's higher, it might be a bug.
+        IF lrc = 2 THEN plyr& = CrickMov(0): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1: mf = 1
+        IF lrc > 2 THEN _SNDPLAYFILE respath$ + sndfldr$ + "GameGlitch.ogg", 1, 1 'Debug alert if "lrc" goes above 2
+    END IF
+
     'TODO: Figure out how to do this with gamepads, as well. I think QB64 tells you if a button was let go of...
 
     '** Change for alpha 11: DEBUG keys are permanently mapped to the keyboard, and moved here.
 
-    IF kp& = MoveExit THEN 'ESC ends our fancy little simulation.
+    IF kp& = MoveExit THEN 'ESC gives you an opportunity to get out of the game, rather than using ALT-F4.
         Sector = 3: Selector = 17: GOSUB PauseGame
 
         'Should F12+PLUS/MINUS be left in? I'm starting to think they should let you reposition Cricket anywhere
@@ -2120,7 +2143,7 @@ ELSEIF atk = -1 AND _KEYDOWN(MoveUp) THEN 'AND slidecount% = 0 THEN
         NEXT hc
         IF odp THEN 'We looked and looked, and actually found the other door. So, let's go into it!
             'LOCATE 10, 1: PRINT "YOU ARE HERE: " + STR$(Vpos) + "," + STR$(Ldoor)
-            'LOCATE 11, 1: PRINT "DOOR GOES HERE: " + STR$(vc) + "," + STR$(hc): _DISPLAY
+            'LOCATE 11, 1: PRINT "DOOR GOES TO: " + STR$(vc) + "," + STR$(hc): _DISPLAY
             mc = VAL(RIGHT$(STR$(LevelData(Vpos, Ldoor)), 1))
             lft = 0
             top = 0
@@ -2417,11 +2440,11 @@ END IF
 '********************
 ' Pause
 '********************
-IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN '"bh = 1" means "ignore the pause button/stick until the player lets go"
+IF JoyMoveOp(7) > 0 AND MovePause < 128 AND bh = 0 THEN '"bh = 1" means "the button/stick is being held"
     IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN bh = 1: GOSUB PauseGame
-ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN
+ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 AND bh = 0 THEN
     IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN bh = 1: GOSUB PauseGame
-ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN bh = 1: GOSUB PauseGame
+ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) AND bh = 0 THEN bh = 1: GOSUB PauseGame
 END IF
 
 '********************
@@ -2440,7 +2463,7 @@ END IF
 IF atk = -1 AND jdrop = 0 AND jpush = 0 THEN 'AND slidecount% = 0
     IF JoyMoveOp(5) > 0 AND MoveJump < 128 THEN
         IF STICK(ActionJump, JoyMoveOp(5)) < MoveJump THEN
-            IF JoyMoveOp(4) > 0 AND MoveRun < 128 THEN
+            IF JoyMoveOp(4) > 0 AND MoveRun < 128 THEN 'If you JUMP while holding RUN, you'll jump higher.
                 IF STICK(ActionRun, JoyMoveOp(4)) < MoveRun THEN rj = 1
             ELSEIF JoyMoveOp(4) > 0 AND MoveRun > 128 THEN
                 IF STICK(ActionRun, JoyMoveOp(4)) > MoveRun THEN rj = 1
@@ -2506,7 +2529,7 @@ ELSEIF JoyMoveOp(6) > 0 AND MoveAttack > 128 THEN
         IF ma THEN _SNDPLAY SEF(18) ELSE IF atk = -1 THEN atk = 0: last& = plyr&
         ma = 0
     END IF
-ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) THEN 'If you attack while you're moving, do this...
+ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) THEN 'If you attack while you're moving, this happens...
     IF JoyMoveOp(2) > 0 AND MoveLeft < 128 THEN
         IF STICK(ActionLeft, JoyMoveOp(2)) < MoveLeft THEN ma = 1
     ELSEIF JoyMoveOp(2) > 0 AND MoveLeft > 128 THEN
@@ -2523,28 +2546,36 @@ ELSEIF JoyMoveOp(6) = 0 AND STRIG(MoveAttack, ActionAttack) THEN 'If you attack 
     ma = 0
 END IF
 
-IF JoyMoveOp(5) > 0 AND MoveJump < 128 THEN 'AND slidecount% = 0 THEN
+IF JoyMoveOp(5) > 0 AND MoveJump < 128 THEN 'AND slidecount% = 0 THEN 'If you let off the JUMP button/thumbstick
     IF STICK(ActionJump, JoyMoveOp(5)) > MoveJump AND jump% > 0 THEN jdrop = 1: jpush = 1
 ELSEIF JoyMoveOp(5) > 0 AND MoveJump > 128 AND slidecount% = 0 THEN
     IF STICK(ActionJump, JoyMoveOp(5)) < MoveJump AND jump% > 0 THEN jdrop = 1: jpush = 1
-ELSEIF JoyMoveOp(5) = 0 AND slidecount% = 0 THEN 'I hope this fixes that bug... I think it did, if I can remember...
+ELSEIF JoyMoveOp(5) = 0 AND slidecount% = 0 THEN 'I hope this fixes that bug... (what bug was it? I forgot...)
     IF STRIG(MoveJump, ActionJump) = 0 AND jump% > 0 THEN jdrop = 1: jpush = 1
 END IF
 
-IF jdrop THEN 'If you let off the JUMP button/thumbstick
-    IF jpush = 0 THEN jpush = 1
+IF jdrop THEN 'This is what we do, if you're still falling
+    IF jpush = 0 THEN jpush = 1 'Locks out the JUMP button until you land, so you can't jump again in midair
     IF rj = 1 THEN rj = 0
     IF plyr& <> CrickJmp(6) THEN plyr& = CrickJmp(6): CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1
     CKT% = CKT% + 1 '   This brings the player sprite back down to the
     CKB% = CKB% + 1 '   platform it was on, one pixel at a time.
 END IF
 
-IF atk > -1 THEN 'If you pressed the ATTACK button/thumbstick while standing still (import the keyboard's routine!)
+IF atk > -1 THEN 'If you pressed the ATTACK button/thumbstick while standing still
     IF atk < 6 THEN plyr& = CrickAtk(atk): CKT% = CKB% - _HEIGHT(CrickAtk(atk)): CKR% = CKL% + _WIDTH(CrickAtk(atk)) - 1
     aa = aa + 1
     IF aa = 10 THEN aa = 0: atk = atk + 1 'Changing "aa = 10" speeds up, or slows down, the attacking animation.
     IF atk = 4 AND aa = 0 THEN _SNDPLAY SEF(17)
     IF atk = 6 THEN atk = -1: plyr& = last&: CKT% = CKB% - _HEIGHT(plyr&): CKR% = CKL% + _WIDTH(plyr&) - 1
+END IF
+
+'One last thing: check to see if the PAUSE button/thumbstick is still being held down/to one side. (bugfix 3 of 3)
+IF JoyMoveOp(7) > 0 AND MovePause < 128 AND bh = 1 THEN
+    IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN bh = 0
+ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 AND bh = 1 THEN
+    IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN bh = 0
+ELSEIF JoyMoveOp(7) = 0 AND bh = 1 AND NOT STRIG(MovePause, ActionPause) THEN bh = 0
 END IF
 
 RETURN
@@ -2667,12 +2698,6 @@ RETURN
 
 PauseGame:
 'Map the "pause" feature to a thumbstick, and try that, too!
-'IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN 'Joystick: all the way to one axis
-'    IF STICK(ActionPause, JoyMoveOp(7)) < MovePause THEN bh = 1 'Button/thumbstick held
-'ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN 'Joystick: all the way to the other axis
-'    IF STICK(ActionPause, JoyMoveOp(7)) > MovePause THEN bh = 1
-'ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) THEN bh = 1 'Gamepad: if it's mapped to a button, instead
-'END IF 'It will skip this entire routine if you're using the keyboard, instead.
 
 'Pause the music if there's a song playing, then play the Pause sound, and dim the screen
 IF actbgm% >= 0 AND bgm& THEN _SNDPAUSE bgm&
@@ -2956,20 +2981,20 @@ DO ' EDIT: Unconditional loop, instead of waiting for CHR$(13).
         IF JoyMoveOp(7) > 0 AND MovePause < 128 THEN
             IF STICK(ActionPause, JoyMoveOp(7)) < MovePause AND bh = 0 THEN
                 IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
-                EXIT DO
+                bh = 1: EXIT DO 'We also tell the game that the pause button is being held down, again.
             END IF
         ELSEIF JoyMoveOp(7) > 0 AND MovePause > 128 THEN
             IF STICK(ActionPause, JoyMoveOp(7)) > MovePause AND bh = 0 THEN
                 IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
-                EXIT DO
+                bh = 1: EXIT DO
             END IF
         ELSEIF JoyMoveOp(7) = 0 AND STRIG(MovePause, ActionPause) AND bh = 0 THEN
             IF Sector = 3 THEN Sector = 0: Selector = 1 'Bugfix
-            EXIT DO
+            bh = 1: EXIT DO
         END IF
 
         'Now, to make sure the other buttons/thumbsticks aren't still being held... (we already checked "pause")
-        IF JoyMoveOp(0) > 0 AND MoveUp < 128 THEN
+        IF JoyMoveOp(0) > 0 AND MoveUp < 128 THEN 'This block of routines is bugfix 2 of 3.
             IF STICK(ActionUp, JoyMoveOp(0)) > MoveUp AND up = 1 THEN up = 0
         ELSEIF JoyMoveOp(0) > 0 AND MoveUp > 128 THEN
             IF STICK(ActionUp, JoyMoveOp(0)) < MoveUp AND up = 1 THEN up = 0
